@@ -1,14 +1,68 @@
 #ifndef  COMPILERDEF_H_
 #define  COMPILERDEF_H_
 
-#define HASHMAX 1024 //哈希表容量
+#define TABLEMAX 1024
+
+#define CODEC_CHECK_RETURN(P)  if(!P){LogError("%s : %s invalid param, line:%d!",__FILE__, __FUNCTION__, __LINE__);return;}
+#define CODEC_CHECK_WHILE(P)  if(!P){LogError("%s : %s invalid param, line:%d!",__FILE__, __FUNCTION__, __LINE__); Sleep(10);continue;}
+#define CODEC_CHECK_RETURN_ERROR(P)  if(!P){LogError("%s : %s invalid param, line:%d!",__FILE__, __FUNCTION__, __LINE__); return ERROR_INVALID_PARAM;}
+#define ZERO_MEMORY(VAR) {memset(&VAR, 0, sizeof(VAR));}
+
+
+
+template<typename T>
+inline void safe_release(T **p, bool b_block)
+{
+	if (*p)
+	{
+		if (b_block)
+			delete[](*p);
+		else
+			delete (*p);
+		*p = NULL;
+	}
+}
+
+template<typename T>
+inline  T *rd_malloc(unsigned int size)
+{
+	T *p = NULL;
+	try
+	{
+		if (size)
+			p = new T[size];
+		else
+			p = new T;
+	}
+	catch (const std::bad_alloc& e)
+	{
+		//LogError("%s : %s malloc error:%s, line:%d!", __FILE__, __FUNCTION__, e.what(), __LINE__);
+	}
+	return p;
+}
+
+template<typename T>
+inline  T *rd_malloc_class(void *reserverd)
+{
+	T *p = NULL;
+	try
+	{
+		p = new T(reserverd);
+	}
+	catch (const std::bad_alloc& e)
+	{
+		//LogError("%s : %s malloc error:%s, line:%d!", __FILE__, __FUNCTION__, e.what(), __LINE__);
+	}
+	return p;
+}
+
 
 typedef struct _Smart_String
 {
 	int size;//length of string
 	int capacity;//the capacity of buffer
 	char *data;
-}m_SmartString;
+}_SmartString;
 
 
 typedef struct _Smart_Array {
@@ -16,15 +70,14 @@ typedef struct _Smart_Array {
 	int capacity;//the capacity of buffer
 	void **data;
 
-}m_SmartArray;
+}_SmartArray;
 
-typedef struct _TkWord {
-	int tkcode;//单词编码
-	struct m_TkWord *next;//冲突的同义词
-	char *spelling;//单词字符串
-	struct Symbol *sym_struct;//指向单词所表示的数据结构
-	struct Symbol *sym_identifier;//指向单词所表示的标识符
-} m_TkWord;
+typedef struct _Tk_Table{
+	int tkcode;//word code
+	char *p_word;//word sring
+	struct m_TkTable *next;//conflict word
+	//struct Symbol *
+}_TkTable;
 
 
 
