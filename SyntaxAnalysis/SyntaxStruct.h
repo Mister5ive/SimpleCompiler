@@ -9,121 +9,121 @@
 class SmartString
 {
 private:
-	m_SmartString *p_SmartString;
-	SmartString() :p_SmartString(NULL){}
+	_SmartString *m_SmartString;
+	SmartString() :m_SmartString(NULL){}
 	~SmartString() {
-		if (p_SmartString != NULL) {
-			if (p_SmartString->data != NULL) {
-				delete[](p_SmartString->data);
-				p_SmartString->data = NULL;
-				p_SmartString->capacity = 0;
-				p_SmartString->size = 0;
+		if (m_SmartString != NULL) {
+			if (m_SmartString->data != NULL) {
+				delete[](m_SmartString->data);
+				m_SmartString->data = NULL;
+				m_SmartString->capacity = 0;
+				m_SmartString->size = 0;
 			}
 		}
-		delete p_SmartString;
-		p_SmartString = NULL;
+		delete m_SmartString;
+		m_SmartString = NULL;
 	}
 
 public:
 
 	int init(int initsize) {
-		p_SmartString = new m_SmartString();
-		if (p_SmartString != NULL){
-			p_SmartString->data = new char[initsize];
-			p_SmartString->size = 0;
-			p_SmartString->capacity = initsize;
+		m_SmartString = new _SmartString();
+		if (m_SmartString != NULL){
+			m_SmartString->data = new char[initsize];
+			m_SmartString->size = 0;
+			m_SmartString->capacity = initsize;
 		}
 		return 1;
 	}
 
 	int free(){
-		if (p_SmartString != NULL){
-			if (p_SmartString->data != NULL) {
-				delete[](p_SmartString->data);
-				p_SmartString->data = NULL;
-				p_SmartString->capacity = 0;
-				p_SmartString->size = 0;
+		if (m_SmartString != NULL){
+			if (m_SmartString->data != NULL) {
+				delete[](m_SmartString->data);
+				m_SmartString->data = NULL;
+				m_SmartString->capacity = 0;
+				m_SmartString->size = 0;
 			}
 			return 1;
 		}
 	}
 
 	int reset(int resetsize = 8){
-		if (p_SmartString != NULL) {
-			if (p_SmartString->data != NULL) {
-				delete[](p_SmartString->data);
-				p_SmartString->data = NULL;
-				p_SmartString->capacity = 0;
-				p_SmartString->size = 0;
+		if (m_SmartString != NULL) {
+			if (m_SmartString->data != NULL) {
+				delete[](m_SmartString->data);
+				m_SmartString->data = NULL;
+				m_SmartString->capacity = 0;
+				m_SmartString->size = 0;
 			}
-			if (p_SmartString->data == NULL){
-			p_SmartString->data = new char[resetsize];
-			p_SmartString->size = 0;
-			p_SmartString->capacity = resetsize;
+			if (m_SmartString->data == NULL){
+			m_SmartString->data = new char[resetsize];
+			m_SmartString->size = 0;
+			m_SmartString->capacity = resetsize;
 			}
 		}
 		return 1;
 	}
 
 	int reinit(int newsize) {
-		if (p_SmartString->data == NULL)
+		if (m_SmartString->data == NULL)
 			return -1;
 		int capacity;
 		char *data = new char[newsize];
 		if (data == NULL)
 			return -1;
-		capacity = p_SmartString->capacity;
+		capacity = m_SmartString->capacity;
 
 		while (capacity < newsize) capacity *= 2;
 
-		memcpy(data, p_SmartString->data, p_SmartString->size);
-		delete[]p_SmartString->data;
-		p_SmartString->data = data;
-		p_SmartString->capacity = capacity;
+		memcpy(data, m_SmartString->data, m_SmartString->size);
+		delete[]m_SmartString->data;
+		m_SmartString->data = data;
+		m_SmartString->capacity = capacity;
 		return 0;
 	}
 
 	int append(char ch){
 		int count;
-		count = p_SmartString->size + 1;
-		if (count > p_SmartString->capacity)
+		count = m_SmartString->size + 1;
+		if (count > m_SmartString->capacity)
 			reinit(count);
-		(p_SmartString->data)[count - 1] = ch;
-		p_SmartString->size = count;
+		(m_SmartString->data)[count - 1] = ch;
+		m_SmartString->size = count;
 		return 0;
 	}
 };
 
 class SmartArray {
 private:
-	m_SmartArray *p_SmartArray;
-	SmartArray() :p_SmartArray(NULL) {}
+	_SmartArray *m_SmartArray;
+	SmartArray() :m_SmartArray(NULL) {}
 	~SmartArray() {
-		if (p_SmartArray){
-			if (p_SmartArray->data) {
+		if (m_SmartArray){
+			if (m_SmartArray->data) {
 				void **p;
-				for (p = p_SmartArray->data; p_SmartArray->size > 0; ++p, --p_SmartArray->size)
+				for (p = m_SmartArray->data; m_SmartArray->size > 0; ++p, --m_SmartArray->size)
 					if (*p)
 						::free(*p);
-				::free(p_SmartArray->data);
-				p_SmartArray->data = NULL;
+				::free(m_SmartArray->data);
+				m_SmartArray->data = NULL;
 			}
-			delete p_SmartArray;
-			p_SmartArray = NULL;
+			delete m_SmartArray;
+			m_SmartArray = NULL;
 		}
 	}
 public:
-	//p_SmartArray->data[initnum][totalsize / initnum]
+	//m_SmartArray->data[initnum][totalsize / initnum]
 	int init(int initsize) {
 		
-		if (p_SmartArray == NULL) {
-			p_SmartArray = new m_SmartArray();
-			if (p_SmartArray == NULL)
+		if (m_SmartArray == NULL) {
+			m_SmartArray = new _SmartArray();
+			if (m_SmartArray == NULL)
 				return -1;
-			p_SmartArray->data = (void**)malloc(sizeof(char)* initsize);
+			m_SmartArray->data = (void**)malloc(sizeof(char)* initsize);
 		
-			p_SmartArray->capacity = initsize;
-			p_SmartArray->size = 0;
+			m_SmartArray->capacity = initsize;
+			m_SmartArray->size = 0;
 		}
 		return 0;
 	}
@@ -131,46 +131,80 @@ public:
 	int reinit(int newsize) {
 		int capacity;
 		void **data;
-		capacity = p_SmartArray->capacity;
+		capacity = m_SmartArray->capacity;
 		while (newsize > capacity) capacity *= 2;
-		data = (void**)realloc(p_SmartArray->data,capacity);
+		data = (void**)realloc(m_SmartArray->data,capacity);
 		if (!data)
 			return -1;
-		p_SmartArray->capacity = capacity;
-		p_SmartArray->data = data;
+		m_SmartArray->capacity = capacity;
+		m_SmartArray->data = data;
 	}
 
 	int add(void *data) {
 		int count;
-		count = p_SmartArray->size + 1;
-		if (count * sizeof(void*) > p_SmartArray->capacity)
+		count = m_SmartArray->size + 1;
+		if (count * sizeof(void*) > m_SmartArray->capacity)
 			reinit(count * sizeof(void*));
-		p_SmartArray->data[count - 1] = data;
-		p_SmartArray->size = count;
+		m_SmartArray->data[count - 1] = data;
+		m_SmartArray->size = count;
 		return 0;
 	}
 
 	int research(char ch) {
 		int ret;
 		char **p;
-		p = (char**)p_SmartArray->data;
-		for (int i = 0; i < p_SmartArray->size; ++i, ++p)
+		p = (char**)m_SmartArray->data;
+		for (int i = 0; i < m_SmartArray->size; ++i, ++p)
 			if (ch == **p)
 				return i;
 		return -1;
 	}
 
 	int free(){
-		if (p_SmartArray->data) {
+		if (m_SmartArray->data) {
 			void **p;
-			for (p = p_SmartArray->data; p_SmartArray->size > 0; ++p, --p_SmartArray->size)
+			for (p = m_SmartArray->data; m_SmartArray->size > 0; ++p, --m_SmartArray->size)
 				if (*p)
 					::free(*p);
-			::free(p_SmartArray->data);
-			p_SmartArray->data = NULL;
+			::free(m_SmartArray->data);
+			m_SmartArray->data = NULL;
 			return 0;
 		}
 	}
+};
+
+class TkTable{
+public:
+	TkTable(){
+		ZERO_MEMORY(m_TkTable);
+		ZERO_MEMORY(m_SmartArray);
+
+	}
+	~TkTable(){
+	}
+private:
+	_TkTable m_TkTable;
+	_SmartArray m_SmartArray;
+private:
+	int elf_hash(char *key){
+		unsigned int hash = 0;
+		unsigned int x = 0;
+		while (*key){
+			hash = (hash << 4) + (*key++);//hash左移4位，当前字符ASCII存入hash  
+			if ((x = hash & 0xf0000000) != 0){
+				//如果最高的四位不为0，则说明字符多于7个，如果不处理，再加第九个字符时，第一个字符会被移出，因此要有如下处理。  
+				//该处理，如果最高位为0，就会仅仅影响5-8位，否则会影响5-31位，因为C语言使用的算数移位  
+				//因为1-4位刚刚存储了新加入到字符，所以不能>>28 
+				hash ^= (x >> 24);//异或
+				//清空28-31位。  
+				hash &= ~x;
+			}
+		}
+		return (hash & 0x7FFFFFFF);
+	}
+
+
+
 };
 
 #endif // ! SYNTAXSTRUCT_H_
