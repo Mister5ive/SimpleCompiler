@@ -187,8 +187,8 @@ private:
 	_SmartArray m_SmartArray;
 private:
 	int elf_hash(char *key){
-		unsigned int hash = 0;
-		unsigned int x = 0;
+		int hash = 0;
+		int x = 0;
 		while (*key){
 			hash = (hash << 4) + (*key++);//hash左移4位，当前字符ASCII存入hash  
 			if ((x = hash & 0xf0000000) != 0){
