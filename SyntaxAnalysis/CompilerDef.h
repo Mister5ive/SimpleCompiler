@@ -17,5 +17,10 @@ typedef struct _Smart_Array {
 	void **data;
 
 }m_SmartArray;
+
+typedef struct _Tk_Table{
+
+
+}m_TkTable;
 #endif // ! COMPILERDEF_H_
 
