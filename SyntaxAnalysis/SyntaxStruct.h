@@ -97,6 +97,7 @@ public:
 class SmartArray {
 private:
 	_SmartArray *m_SmartArray;
+public:
 	SmartArray() :m_SmartArray(NULL) {}
 	~SmartArray() {
 		if (m_SmartArray){
@@ -175,16 +176,35 @@ public:
 
 class TkTable{
 public:
-	TkTable(){
-		ZERO_MEMORY(m_TkTable);
+	TkTable():m_Word(NULL){
 		ZERO_MEMORY(m_SmartArray);
-
 	}
 	~TkTable(){
 	}
+	//init
+	int init() {
+		if (m_Word == NULL) {
+			m_Word = new _TkWord*[TABLEMAX];
+			for(int i = 0;i<TABLEMAX;i++)
+				ZERO_MEMORY(m_Word[i]);
+		}
+		m_SmartArray.init(10);
+		return 0;
+	}
+	//direct insert key
+	_TkWord* direct_insert(_TkWord * tw) {
+		int keynu;
+		m_SmartArray.add(tw);
+		keynu = elf_hash(tw->p_word);
+		tw->next = m_Word[keynu];
+		m_Word[keynu] = tw;
+		return tw;
+	}
+
 private:
-	_TkTable m_TkTable;
-	_SmartArray m_SmartArray;
+	_TkWord **m_Word;
+	SmartArray m_SmartArray;
+
 private:
 	int elf_hash(char *key){
 		int hash = 0;
@@ -201,6 +221,7 @@ private:
 			}
 		}
 		return (hash & 0x7FFFFFFF);
+
 	}
 
 

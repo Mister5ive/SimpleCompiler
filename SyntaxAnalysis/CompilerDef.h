@@ -72,12 +72,12 @@ typedef struct _Smart_Array {
 
 }_SmartArray;
 
-typedef struct _Tk_Table{
+typedef struct _Tk_Word{
 	int tkcode;//word code
 	char *p_word;//word sring
-	struct m_TkTable *next;//conflict word
+	struct _Tk_Word *next;//conflict word
 	//struct Symbol *
-}_TkTable;
+}_TkWord;
 
 
 
