@@ -37,13 +37,11 @@ enum  eTokenCode {
 	TK_CINT,
 	TK_CCHAR,
 	TK_CSTR,
-
 	KW_CHAR,
 	KW_SHORT,
 	KW_INT,
 	KW_VOID,
 	KW_STRUCT,
-
 	KW_IF,
 	KW_ELSE,
 	KW_FOR,
@@ -55,7 +53,6 @@ enum  eTokenCode {
 	KW_CDECL,
 	KW_STDCALL,
 	TK_IDENT 
-
 };
 
 template<typename T>

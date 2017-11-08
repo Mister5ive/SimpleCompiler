@@ -97,8 +97,9 @@ public:
 class SmartArray {
 private:
 	_SmartArray *m_SmartArray;
+	int count;
 public:
-	SmartArray() :m_SmartArray(NULL) {}
+	SmartArray() :m_SmartArray(NULL), count(0){}
 	~SmartArray() {
 		if (m_SmartArray){
 			if (m_SmartArray->data) {
@@ -142,7 +143,7 @@ public:
 	}
 
 	int add(void *data) {
-		int count;
+		
 		count = m_SmartArray->size + 1;
 		if (count * sizeof(void*) > m_SmartArray->capacity)
 			reinit(count * sizeof(void*));
@@ -172,14 +173,21 @@ public:
 			return 0;
 		}
 	}
+	int get_count() {
+		return count;
+	}
 };
 
 class TkTable{
 public:
-	TkTable():m_Word(NULL){
-		ZERO_MEMORY(m_SmartArray);
+	TkTable() :m_Word(NULL),tmpTkWord(NULL) {
+		m_tkTable.init(8);
+		init_lex();
 	}
 	~TkTable(){
+		if (tmpTkWord != NULL) {
+			free(tmpTkWord);
+		}
 	}
 	//init
 	int init() {
@@ -188,23 +196,65 @@ public:
 			for(int i = 0;i<TABLEMAX;i++)
 				ZERO_MEMORY(m_Word[i]);
 		}
-		m_SmartArray.init(10);
+		m_tkTable.init(10);
 		return 0;
 	}
 	//direct insert key
 	_TkWord* direct_insert(_TkWord * tw) {
 		int keynu;
-		m_SmartArray.add(tw);
+		m_tkTable.add(tw);
 		keynu = elf_hash(tw->p_word);
 		tw->next = m_Word[keynu];
 		m_Word[keynu] = tw;
 		return tw;
 	}
+	//find
+	_TkWord* find(char *key) {
+		int keynu;
+		keynu = elf_hash(key);
+		_TkWord *tp = NULL, *tp1;
+		for (tp1 = m_Word[keynu]; tp1;tp1->next) {
+			if (!strcmp(key, tp1->p_word)) {
+				//token = tp1->tkcode;
+				tp = tp1;
+			}
+		}
+		return tp;
+	}
+	//direct
+	_TkWord* insert(char* key) {
+		
+		int keynu;
+		char *s;
+		char *end;
+		int length;
+		if (tmpTkWord != NULL) {
+			free(tmpTkWord);
+			tmpTkWord = NULL;
+		}
+		keynu = elf_hash(key);
+		tmpTkWord = find(key);
+		//没有，插入
+		if (tmpTkWord == NULL) {
+			length = strlen(key);
+			tmpTkWord = new _TkWord[sizeof(_TkWord) + length +1];
+			tmpTkWord->next = m_Word[keynu];
+			m_Word[keynu] = tmpTkWord;
+			m_tkTable.add(tmpTkWord);
+			tmpTkWord->tkcode = m_tkTable.get_count() - 1;
+			s = (char*)tmpTkWord + sizeof(_TkWord);
+			tmpTkWord->p_word = s;
+			memcpy(s,key,length);
+			s[length] = char('\0');
+		}
+		return tmpTkWord;
+	}
+
 
 private:
 	_TkWord **m_Word;
-	SmartArray m_SmartArray;
-
+	SmartArray m_tkTable;
+	_TkWord *tmpTkWord;//中间使用的用于返回到指针
 private:
 	int elf_hash(char *key){
 		int hash = 0;
@@ -221,58 +271,60 @@ private:
 			}
 		}
 		return (hash & 0x7FFFFFFF);
-
 	}
+
+//单词表初始化
 	void init_lex() {
-		_TkWord *tp;
+		_TkWord *tmp;
 		static _TkWord keywords[] = {
-			{ TK_PLUS,	NULL	,"+",	NULL,	NULL },
-			{ TK_MINUS,	NULL	,"-",	NULL,	NULL },
-			{ TK_STAR,	NULL	,"*",	NULL,	NULL },
-			{ TK_DIVIDE,	NULL	,"/",	NULL,	NULL },
-			{ TK_MOD,	NULL	,"%",	NULL,	NULL },
-			{ TK_EQ,		NULL	,"==",	NULL,	NULL },
-			{ TK_NEQ,	NULL	,"!=",	NULL,	NULL },
-			{ TK_LT,		NULL	,"<",	NULL,	NULL },
-			{ TK_LEQ,	NULL	,"<=",	NULL,	NULL },
-			{ TK_GT,		NULL	,">",	NULL,	NULL },
-			{ TK_GEQ,	NULL	,">=",	NULL,	NULL },
-			{ TK_ASSIGN,	NULL	,"=",	NULL,	NULL },
-			{ TK_EPOINTSTO,	NULL	,"->",	NULL,	NULL },
-			{ TK_DOT,	NULL	,".",	NULL,	NULL },
-			{ TK_AND,	NULL	,"&",	NULL,	NULL },
-			{ TK_OPENPA,	NULL	,"(",	NULL,	NULL },
-			{ TK_CLOSEPA,	NULL	,")",	NULL,	NULL },
-			{ TK_OPENBR,	NULL	,"[",	NULL,	NULL },
-			{ TK_CLOSEBR,	NULL	,"]",	NULL,	NULL },
-			{ TK_BEGIN,		NULL	,"{",	NULL,	NULL },
-			{ TK_END,	NULL	,"}",	NULL,	NULL },
-			{ TK_SEMICOLON,		NULL	,";",	NULL,	NULL },
-			{ TK_COMMA,	NULL	,",",	NULL,	NULL },
-			{ TK_ELLIPSIS,		NULL	,"...",	NULL,	NULL },
-			{ TK_EOF,	NULL	,"End_Of_File",	NULL,	NULL },
-			{ TK_CINT,	NULL	,"整形常量",	NULL,	NULL },
-			{ TK_CCHAR,	NULL	,"字符常量",	NULL,	NULL },
-			{ TK_CSTR,	NULL	,"字符串常量",	NULL,	NULL },
-
-			{ KW_CHAR,	NULL	,"char",	NULL,	NULL },
-			{ KW_SHORT,	NULL	,"short",	NULL,	NULL },
-			{ KW_INT,	NULL	,"int",	NULL,	NULL },
-			{ KW_VOID,	NULL	,"void",	NULL,	NULL },
-			{ KW_STRUCT,	NULL	,"struct",	NULL,	NULL },
-
-			{ KW_IF,	NULL	,"if",	NULL,	NULL },
-			{ KW_ELSE,	NULL	,"else",	NULL,	NULL },
-			{ KW_FOR,	NULL	,"for",	NULL,	NULL },
+			{ TK_PLUS,		NULL	,"+",			NULL,	NULL },
+			{ TK_MINUS,		NULL	,"-",			NULL,	NULL },
+			{ TK_STAR,		NULL	,"*",			NULL,	NULL },
+			{ TK_DIVIDE,	NULL	,"/",			NULL,	NULL },
+			{ TK_MOD,		NULL	,"%",			NULL,	NULL },
+			{ TK_EQ,		NULL	,"==",			NULL,	NULL },
+			{ TK_NEQ,		NULL	,"!=",			NULL,	NULL },
+			{ TK_LT,		NULL	,"<",			NULL,	NULL },
+			{ TK_LEQ,		NULL	,"<=",			NULL,	NULL },
+			{ TK_GT,		NULL	,">",			NULL,	NULL },
+			{ TK_GEQ,		NULL	,">=",			NULL,	NULL },
+			{ TK_ASSIGN,	NULL	,"=",			NULL,	NULL },
+			{ TK_EPOINTSTO,	NULL	,"->",			NULL,	NULL },
+			{ TK_DOT,		NULL	,".",			NULL,	NULL },
+			{ TK_AND,		NULL	,"&",			NULL,	NULL },
+			{ TK_OPENPA,	NULL	,"(",			NULL,	NULL },
+			{ TK_CLOSEPA,	NULL	,")",			NULL,	NULL },
+			{ TK_OPENBR,	NULL	,"[",			NULL,	NULL },
+			{ TK_CLOSEBR,	NULL	,"]",			NULL,	NULL },
+			{ TK_BEGIN,		NULL	,"{",			NULL,	NULL },
+			{ TK_END,		NULL	,"}",			NULL,	NULL },
+			{ TK_SEMICOLON,	NULL	,";",			NULL,	NULL },
+			{ TK_COMMA,		NULL	,",",			NULL,	NULL },
+			{ TK_ELLIPSIS,	NULL	,"...",			NULL,	NULL },
+			{ TK_EOF,		NULL	,"End_Of_File",	NULL,	NULL },
+			{ TK_CINT,		NULL	,"整形常量",	NULL,	NULL },
+			{ TK_CCHAR,		NULL	,"字符常量",	NULL,	NULL },
+			{ TK_CSTR,		NULL	,"字符串常量",	NULL,	NULL },
+			{ KW_CHAR,		NULL	,"char",		NULL,	NULL },
+			{ KW_SHORT,		NULL	,"short",		NULL,	NULL },
+			{ KW_INT,		NULL	,"int",			NULL,	NULL },
+			{ KW_VOID,		NULL	,"void",		NULL,	NULL },
+			{ KW_STRUCT,	NULL	,"struct",		NULL,	NULL },
+			{ KW_IF,		NULL	,"if",			NULL,	NULL },
+			{ KW_ELSE,		NULL	,"else",		NULL,	NULL },
+			{ KW_FOR,		NULL	,"for",			NULL,	NULL },
 			{ KW_CONTINUE,	NULL	,"continue",	NULL,	NULL },
-			{ KW_BREAK,	NULL	,"break",	NULL,	NULL },
-			{ KW_RETURN,	NULL	,"return",	NULL,	NULL },
-			{ KW_SIZEOF,	NULL	,"sizeof",	NULL,	NULL },
-			{ KW_ALIGN,	NULL	,"__align",	NULL,	NULL },
-			{ KW_CDECL,	NULL	,"__cdecl",	NULL,	NULL },
+			{ KW_BREAK,		NULL	,"break",		NULL,	NULL },
+			{ KW_RETURN,	NULL	,"return",		NULL,	NULL },
+			{ KW_SIZEOF,	NULL	,"sizeof",		NULL,	NULL },
+			{ KW_ALIGN,		NULL	,"__align",		NULL,	NULL },
+			{ KW_CDECL,		NULL	,"__cdecl",		NULL,	NULL },
 			{ KW_STDCALL,	NULL	,"__stdcall",	NULL,	NULL },
-			{ 0,	NULL	,NULL,	NULL,	NULL },
+			{ 0,			NULL	,NULL,			NULL,	NULL },
 		};
+		for (tmp = &keywords[0]; tmp->p_word != NULL; tmp++ ) {
+			direct_insert(tmp);
+		}
 	}
 
 
