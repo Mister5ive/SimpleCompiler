@@ -59,7 +59,9 @@ static BOOL OpenFile()
 	int tlen = MultiByteToWideChar(CP_ACP, 0, logPath, strlen(logPath), NULL, 0);
 	MultiByteToWideChar(CP_ACP, 0, logPath, strlen(logPath), temp, tlen);
 	temp[tlen] = '\0';
-	if (FindFirstFileExists(temp, FILE_ATTRIBUTE_DIRECTORY) == FALSE)
+	WIN32_FILE_ATTRIBUTE_DATA attrs = { 0 };
+	if(FALSE == GetFileAttributesEx(temp, GetFileExInfoStandard, &attrs))
+	//if (FindFirstFileExists(temp, FILE_ATTRIBUTE_DIRECTORY) == FALSE)
 	{
 		if (CreateDirectoryA(logPath, NULL) == FALSE)
 		{
