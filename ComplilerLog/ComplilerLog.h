@@ -1,22 +1,37 @@
-// 下列 ifdef 块是创建使从 DLL 导出更简单的
-// 宏的标准方法。此 DLL 中的所有文件都是用命令行上定义的 COMPLILERLOG_EXPORTS
-// 符号编译的。在使用此 DLL 的
-// 任何其他项目上不应定义此符号。这样，源文件中包含此文件的任何其他项目都会将
-// COMPLILERLOG_API 函数视为是从 DLL 导入的，而此 DLL 则将用此宏定义的
-// 符号视为是被导出的。
+#ifndef COMPLILERLOG_H_
+#define COMPLILERLOG_H_
+
+#define PRINT_MESSAGE  (0x0001)
+#define PRINT_ERROR    (0x0010)
+#define PRINT_WARRNING (0x0100)
+#define PRINT_DEBUG    (0x1000)
+#define PRINT_ALL (PRINT_ERROR | PRINT_MESSAGE | PRINT_WARRNING | PRINT_DEBUG)
+
 #ifdef COMPLILERLOG_EXPORTS
 #define COMPLILERLOG_API __declspec(dllexport)
 #else
 #define COMPLILERLOG_API __declspec(dllimport)
 #endif
 
-// 此类是从 ComplilerLog.dll 导出的
-class COMPLILERLOG_API CComplilerLog {
-public:
-	CComplilerLog(void);
-	// TODO:  在此添加您的方法。
-};
 
-extern COMPLILERLOG_API int nComplilerLog;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-COMPLILERLOG_API int fnComplilerLog(void);
+	COMPLILERLOG_API void LogOpen(char *logFilePath, int logLevel);
+
+	COMPLILERLOG_API void LogClose();
+
+	COMPLILERLOG_API void LogError(const char *fmt, ...);
+
+	COMPLILERLOG_API void LogWarrning(const char *fmt, ...);
+
+	COMPLILERLOG_API void LogMessage(const char *fmt, ...);
+
+	COMPLILERLOG_API void LogDebug(const char *fmt, ...);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
