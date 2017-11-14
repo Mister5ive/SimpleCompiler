@@ -92,7 +92,7 @@ public:
 		m_SmartString->size = count;
 		return 0;
 	}
-	void printf() {
+	void print() {
 		if (m_SmartString != NULL){
 			for (int i = 0; i < m_SmartString->size; i++)
 				::printf("%c", m_SmartString->data[i]);
@@ -134,7 +134,6 @@ public:
 		}
 	}
 public:
-	//m_SmartArray->data[initnum][totalsize / initnum]
 	int init(int initsize) {
 		
 		if (m_SmartArray == NULL) {
@@ -183,17 +182,38 @@ public:
 
 	int free(){
 		if (m_SmartArray->data) {
-			void **p;
-			for (p = m_SmartArray->data; m_SmartArray->size > 0; ++p, --m_SmartArray->size)
+			//void **p;
+			/*for (p = m_SmartArray->data; m_SmartArray->size; ++p, --m_SmartArray->size)
 				if (*p)
-					::free(*p);
+					::free(*p);*/
 			::free(m_SmartArray->data);
 			m_SmartArray->data = NULL;
+			m_SmartArray->size = 0;
+			m_SmartArray->capacity = 0;
+			count = 0;
 			return 0;
 		}
 	}
 	int get_count() {
 		return count;
+	}
+	int size() {
+		if(m_SmartArray)
+			return m_SmartArray->size;
+		return -1;
+
+	}
+	int capacity() {
+		if (m_SmartArray)
+			return m_SmartArray->capacity;
+		return -1;
+	}
+	void print() {
+		if (m_SmartArray) {
+			for(int i = 0;i < m_SmartArray->size;i++)
+				printf("%s\n", m_SmartArray->data[i]);
+		}
+		
 	}
 };
 
