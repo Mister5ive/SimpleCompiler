@@ -10,7 +10,10 @@ class SmartString
 {
 private:
 	_SmartString *m_SmartString;
-	SmartString() :m_SmartString(NULL){}
+	
+
+public:
+	SmartString() :m_SmartString(NULL) {}
 	~SmartString() {
 		if (m_SmartString != NULL) {
 			if (m_SmartString->data != NULL) {
@@ -23,9 +26,6 @@ private:
 		delete m_SmartString;
 		m_SmartString = NULL;
 	}
-
-public:
-
 	int init(int initsize) {
 		m_SmartString = new _SmartString();
 		if (m_SmartString != NULL){
@@ -91,6 +91,25 @@ public:
 		(m_SmartString->data)[count - 1] = ch;
 		m_SmartString->size = count;
 		return 0;
+	}
+	void printf() {
+		if (m_SmartString != NULL){
+			for (int i = 0; i < m_SmartString->size; i++)
+				::printf("%c", m_SmartString->data[i]);
+		}
+	}
+
+	int size() {
+		if (m_SmartString != NULL) {
+			return m_SmartString->size;
+		}
+		return -1;
+	}
+	int capacity() {
+		if (m_SmartString != NULL) {
+			return m_SmartString->capacity;
+		}
+		return -1;
 	}
 };
 
