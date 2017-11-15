@@ -4,7 +4,7 @@
 int main()
 {
 	//SmartString Test
-	/*SmartString smartstring;
+	/*SmartString<char> smartstring;
 	smartstring.init(10);
 	smartstring.append('w');
 	smartstring.append('d');
@@ -33,31 +33,37 @@ int main()
 	system("pause");*/
 
 	//SmartArray Test
-	SmartArray smartarray;
-	smartarray.init(20);
-	smartarray.add("MMP");
-	smartarray.add("NMB");
-	smartarray.add("MLGB");
-	printf("%d\n",smartarray.get_count());
-	printf("%d\n", smartarray.size());
-	printf("%d\n", smartarray.capacity());
-	smartarray.print();
-	system("pause");
-	smartarray.reinit(50);
-	smartarray.add("WQNMLGB");
-	printf("%d\n", smartarray.get_count());
-	printf("%d\n", smartarray.size());
-	printf("%d\n", smartarray.capacity());
-	smartarray.print();
-	system("pause");
-	printf("%d\n", smartarray.research('N'));
-	system("pause");
+	//SmartArray<char> smartarray;
+	//smartarray.init(20);
+	//smartarray.add("MMP");
+	//smartarray.add("NMB");
+	//smartarray.add("MLGB");
+	//printf("~~~%d\n",smartarray.get_count());
+	//printf("%d\n", smartarray.size());
+	//printf("%d\n", smartarray.capacity());
+	//smartarray.print();
+	////system("pause");
+	//smartarray.reinit(50);
+	//smartarray.add("WQNMLGB");
+	//printf("~~~~%d\n", smartarray.get_count());
+	//printf("%d\n", smartarray.size());
+	//printf("%d\n", smartarray.capacity());
+	//smartarray.print();
+	////system("pause");
+	//printf("%d\n", smartarray.research('N'));
+	//printf("***%d\n", smartarray.search("123"));
+	////system("pause");
 
-	smartarray.free();
-	printf("%d\n", smartarray.get_count());
-	printf("%d\n", smartarray.size());
-	printf("%d\n", smartarray.capacity());
-	smartarray.print();
-	system("pause");
+	//smartarray.free();
+	//printf("%d\n", smartarray.get_count());
+	//printf("%d\n", smartarray.size());
+	//printf("%d\n", smartarray.capacity());
+	//smartarray.print();
+	//system("pause");
 
+	TkTable tktable;
+	tktable.init();
+	tktable.init_lex();
+
+	system("pause");
 }

@@ -8,7 +8,18 @@
 #define CODEC_CHECK_RETURN_ERROR(P)  if(!P){LogError("%s : %s invalid param, line:%d!",__FILE__, __FUNCTION__, __LINE__); return ERROR_INVALID_PARAM;}
 #define ZERO_MEMORY(VAR) {memset(&VAR, 0, sizeof(VAR));}
 
-enum  eTokenCode {
+typedef enum {
+	SCP_ERROR_NONE = 0,
+
+	SCP_INVALID_PARAM = -1,
+	SCP_POINTER_NULL = -2,
+	SCP_MALLOC_FAILED = -3,
+
+	
+
+}scpStatus;
+
+typedef enum{
 	TK_PLUS,
 	TK_MINUS,
 	TK_STAR,
@@ -53,7 +64,9 @@ enum  eTokenCode {
 	KW_CDECL,
 	KW_STDCALL,
 	TK_IDENT 
-};
+}eTokenCode;
+
+
 
 template<typename T>
 inline void safe_release(T **p, bool b_block)
@@ -102,20 +115,25 @@ inline  T *rd_malloc_class(void *reserverd)
 }
 
 
-typedef struct _Smart_String
+
+template<typename T>
+struct _SmartString
 {
 	int size;//length of string
 	int capacity;//the capacity of buffer
-	char *data;
-}_SmartString;
+	T *data;
+};
 
 
-typedef struct _Smart_Array {
+template<typename T>
+struct _SmartArray {
 	int size;//length of array
 	int capacity;//the capacity of buffer
-	void **data;
+	T **data;
 
-}_SmartArray;
+};
+
+
 
 typedef struct _Tk_Word{
 	int tkcode;//word code
@@ -127,6 +145,52 @@ typedef struct _Tk_Word{
 }_TkWord;
 
 
+static _TkWord keywords[] = {
+	{ TK_PLUS,		NULL	,"+",			NULL,	NULL },
+	{ TK_MINUS,		NULL	,"-",			NULL,	NULL },
+	{ TK_STAR,		NULL	,"*",			NULL,	NULL },
+	{ TK_DIVIDE,	NULL	,"/",			NULL,	NULL },
+	{ TK_MOD,		NULL	,"%",			NULL,	NULL },
+	{ TK_EQ,		NULL	,"==",			NULL,	NULL },
+	{ TK_NEQ,		NULL	,"!=",			NULL,	NULL },
+	{ TK_LT,		NULL	,"<",			NULL,	NULL },
+	{ TK_LEQ,		NULL	,"<=",			NULL,	NULL },
+	{ TK_GT,		NULL	,">",			NULL,	NULL },
+	{ TK_GEQ,		NULL	,">=",			NULL,	NULL },
+	{ TK_ASSIGN,	NULL	,"=",			NULL,	NULL },
+	{ TK_EPOINTSTO,	NULL	,"->",			NULL,	NULL },
+	{ TK_DOT,		NULL	,".",			NULL,	NULL },
+	{ TK_AND,		NULL	,"&",			NULL,	NULL },
+	{ TK_OPENPA,	NULL	,"(",			NULL,	NULL },
+	{ TK_CLOSEPA,	NULL	,")",			NULL,	NULL },
+	{ TK_OPENBR,	NULL	,"[",			NULL,	NULL },
+	{ TK_CLOSEBR,	NULL	,"]",			NULL,	NULL },
+	{ TK_BEGIN,		NULL	,"{",			NULL,	NULL },
+	{ TK_END,		NULL	,"}",			NULL,	NULL },
+	{ TK_SEMICOLON,	NULL	,";",			NULL,	NULL },
+	{ TK_COMMA,		NULL	,",",			NULL,	NULL },
+	{ TK_ELLIPSIS,	NULL	,"...",			NULL,	NULL },
+	{ TK_EOF,		NULL	,"End_Of_File",	NULL,	NULL },
+	{ TK_CINT,		NULL	,"整形常量",	NULL,	NULL },
+	{ TK_CCHAR,		NULL	,"字符常量",	NULL,	NULL },
+	{ TK_CSTR,		NULL	,"字符串常量",	NULL,	NULL },
+	{ KW_CHAR,		NULL	,"char",		NULL,	NULL },
+	{ KW_SHORT,		NULL	,"short",		NULL,	NULL },
+	{ KW_INT,		NULL	,"int",			NULL,	NULL },
+	{ KW_VOID,		NULL	,"void",		NULL,	NULL },
+	{ KW_STRUCT,	NULL	,"struct",		NULL,	NULL },
+	{ KW_IF,		NULL	,"if",			NULL,	NULL },
+	{ KW_ELSE,		NULL	,"else",		NULL,	NULL },
+	{ KW_FOR,		NULL	,"for",			NULL,	NULL },
+	{ KW_CONTINUE,	NULL	,"continue",	NULL,	NULL },
+	{ KW_BREAK,		NULL	,"break",		NULL,	NULL },
+	{ KW_RETURN,	NULL	,"return",		NULL,	NULL },
+	{ KW_SIZEOF,	NULL	,"sizeof",		NULL,	NULL },
+	{ KW_ALIGN,		NULL	,"__align",		NULL,	NULL },
+	{ KW_CDECL,		NULL	,"__cdecl",		NULL,	NULL },
+	{ KW_STDCALL,	NULL	,"__stdcall",	NULL,	NULL },
+	{ 0,			NULL	,NULL,			NULL,	NULL },
+};
 
 #endif // ! COMPILERDEF_H_
 
