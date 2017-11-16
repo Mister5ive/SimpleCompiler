@@ -230,14 +230,12 @@ public:
 
 class TkTable{
 public:
-	TkTable() :m_Word(NULL),tmpTkWord(NULL){
+	TkTable() :m_Word(NULL){
 		m_tkTable.init(256);
 		
 	}
 	~TkTable(){
-		if (tmpTkWord != NULL) {
-			free(tmpTkWord);
-		}
+		
 		if (m_Word != NULL) {
 			free(m_Word);
 			m_Word = NULL;
@@ -280,9 +278,10 @@ public:
 		keynu = elf_hash(key);
 		_TkWord *tp = NULL, *tp1;
 		for (tp1 = m_Word[keynu]; tp1;tp1->next) {
-			if (!strcmp(key, tp1->p_word)) {
+			if (strcmp(key, tp1->p_word) == 0) {
 				//token = tp1->tkcode;
 				tp = tp1;
+				break;
 			}
 		}
 		return tp;
@@ -294,10 +293,7 @@ public:
 		char *s;
 		char *end;
 		int length;
-		if (tmpTkWord != NULL) {
-			free(tmpTkWord);
-			tmpTkWord = NULL;
-		}
+		_TkWord *tmpTkWord = NULL;
 		keynu = elf_hash(key);
 		tmpTkWord = find(key);
 		//没有，插入
@@ -315,14 +311,24 @@ public:
 		}
 		return tmpTkWord;
 	}
+	//test
 	void print() {
-		
+		if (m_Word != NULL) {
+			for (int i = 0; i < TABLEMAX; i++) {
+				_TkWord *tmp = m_Word[i];
+				while ( tmp != NULL) {
+					printf("key:%d, str:%s , token:%d\n",i,tmp->p_word,tmp->tkcode);
+					tmp = tmp->next;
+					if (tmp != NULL)
+						printf("-----conflict\n");
+				}
+			}
+		}
 	}
 
 private:
-	_TkWord **m_Word;
-	SmartArray<_TkWord> m_tkTable;
-	_TkWord *tmpTkWord;//中间使用的用于返回到指针
+	_TkWord **m_Word;//hash map
+	SmartArray<_TkWord> m_tkTable;//dynamic array
 	
 private:
 	int elf_hash(char *key){

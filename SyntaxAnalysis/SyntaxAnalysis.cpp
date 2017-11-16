@@ -64,6 +64,13 @@ int main()
 	TkTable tktable;
 	tktable.init();
 	tktable.init_lex();
+	//tktable.insert("wc");
+	//tktable.insert("wc");
+	//tktable.insert("wd");
+	//tktable.insert("wc");
+	//tktable.insert("wd");
 
+
+	tktable.print();
 	system("pause");
 }
