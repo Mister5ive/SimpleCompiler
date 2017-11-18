@@ -281,7 +281,6 @@ public:
 			if (strcmp(key, tp1->p_word) == 0) {
 				//token = tp1->tkcode;
 				tp = tp1;
-				break;
 			}
 		}
 		return tp;
@@ -308,6 +307,10 @@ public:
 			tmpTkWord->p_word = s;
 			memcpy(s,key,length);
 			s[length] = char('\0');
+		}
+		//³åÍ»
+		else {
+		
 		}
 		return tmpTkWord;
 	}
