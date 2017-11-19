@@ -277,10 +277,11 @@ public:
 		int keynu;
 		keynu = elf_hash(key);
 		_TkWord *tp = NULL, *tp1;
-		for (tp1 = m_Word[keynu]; tp1;tp1->next) {
+		for (tp1 = m_Word[keynu]; tp1;tp1 = tp1->next) {
 			if (strcmp(key, tp1->p_word) == 0) {
 				//token = tp1->tkcode;
 				tp = tp1;
+				//break;
 			}
 		}
 		return tp;
@@ -307,10 +308,6 @@ public:
 			tmpTkWord->p_word = s;
 			memcpy(s,key,length);
 			s[length] = char('\0');
-		}
-		//³åÍ»
-		else {
-		
 		}
 		return tmpTkWord;
 	}

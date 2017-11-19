@@ -277,9 +277,9 @@ void LogWarrning(const char *fmt, ...)
 	va_end(args);
 }
 
-void LogDebug(const char *fmt, ...)
+void LogLink(const char *fmt, ...)
 {
-	if ((g_logLevel & PRINT_DEBUG) == 0)
+	if ((g_logLevel & PRINT_LINK) == 0)
 	{
 		return;
 	}
@@ -291,8 +291,41 @@ void LogDebug(const char *fmt, ...)
 	va_start(args, fmt);
 
 	//WriteLog(fmt, args);
-	WriteLogEx('D', fmt, args);
-
+	if (fLog == stdout)
+	{
+		SetColor(YELLOW);
+	}
+	WriteLogEx('L', fmt, args);
+	if (fLog == stdout)
+	{
+		SetColor(WHITE);
+	}
+	
 	va_end(args);
 }
 
+void LogCompile(const char *fmt, ...)
+{
+	if ((g_logLevel & PRINT_COMPILE) == 0)
+	{
+		return;
+	}
+	if (fLog == NULL)
+	{
+		fLog = stdout;
+	}
+	va_list args;
+	va_start(args, fmt);
+
+	//WriteLog(fmt, args);
+	if (fLog == stdout)
+	{
+		SetColor(RED);
+	}
+	WriteLogEx('C', fmt, args);
+	if (fLog == stdout)
+	{
+		SetColor(WHITE);
+	}
+	va_end(args);
+}

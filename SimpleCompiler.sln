@@ -5,11 +5,13 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimpleCompiler", "SimpleCompiler\SimpleCompiler.vcxproj", "{F05C01A2-D814-4B7E-A378-81B6C47DFCAD}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SyntaxAnalysis", "SyntaxAnalysis\SyntaxAnalysis.vcxproj", "{AFBB9991-7CC3-443E-AB7A-2A7348493F73}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SyntaxAnalysis_Test", "SyntaxAnalysis\SyntaxAnalysis.vcxproj", "{AFBB9991-7CC3-443E-AB7A-2A7348493F73}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ComplilerLog", "ComplilerLog\ComplilerLog.vcxproj", "{928785CB-476A-4293-9BAC-14943B3C1396}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TEST", "TEST\TEST.vcxproj", "{838786F5-84AD-4833-B4C2-19D67BC157A1}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LexicalAnalysis", "LexicalAnalysis\LexicalAnalysis.vcxproj", "{869F7768-A39C-41ED-B4AE-5AF0F3FDDF6C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,6 +53,14 @@ Global
 		{838786F5-84AD-4833-B4C2-19D67BC157A1}.Release|x64.Build.0 = Release|x64
 		{838786F5-84AD-4833-B4C2-19D67BC157A1}.Release|x86.ActiveCfg = Release|Win32
 		{838786F5-84AD-4833-B4C2-19D67BC157A1}.Release|x86.Build.0 = Release|Win32
+		{869F7768-A39C-41ED-B4AE-5AF0F3FDDF6C}.Debug|x64.ActiveCfg = Debug|x64
+		{869F7768-A39C-41ED-B4AE-5AF0F3FDDF6C}.Debug|x64.Build.0 = Debug|x64
+		{869F7768-A39C-41ED-B4AE-5AF0F3FDDF6C}.Debug|x86.ActiveCfg = Debug|Win32
+		{869F7768-A39C-41ED-B4AE-5AF0F3FDDF6C}.Debug|x86.Build.0 = Debug|Win32
+		{869F7768-A39C-41ED-B4AE-5AF0F3FDDF6C}.Release|x64.ActiveCfg = Release|x64
+		{869F7768-A39C-41ED-B4AE-5AF0F3FDDF6C}.Release|x64.Build.0 = Release|x64
+		{869F7768-A39C-41ED-B4AE-5AF0F3FDDF6C}.Release|x86.ActiveCfg = Release|Win32
+		{869F7768-A39C-41ED-B4AE-5AF0F3FDDF6C}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

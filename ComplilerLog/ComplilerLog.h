@@ -1,11 +1,13 @@
 #ifndef COMPLILERLOG_H_
 #define COMPLILERLOG_H_
 
-#define PRINT_MESSAGE  (0x0001)
-#define PRINT_ERROR    (0x0010)
-#define PRINT_WARRNING (0x0100)
-#define PRINT_DEBUG    (0x1000)
-#define PRINT_ALL (PRINT_ERROR | PRINT_MESSAGE | PRINT_WARRNING | PRINT_DEBUG)
+#define PRINT_MESSAGE  (0x00001)
+#define PRINT_ERROR    (0x00010)
+#define PRINT_WARRNING (0x00100)
+#define PRINT_LINK     (0x01000)
+#define PRINT_COMPILE  (0x10000)
+
+#define PRINT_ALL (PRINT_ERROR | PRINT_MESSAGE | PRINT_WARRNING | PRINT_DEBUG | PRINT_COMPILE)
 
 #ifdef COMPLILERLOG_EXPORTS
 #define COMPLILERLOG_API __declspec(dllexport)
@@ -28,7 +30,10 @@ extern "C" {
 
 	COMPLILERLOG_API void LogMessage(const char *fmt, ...);
 
-	COMPLILERLOG_API void LogDebug(const char *fmt, ...);
+	COMPLILERLOG_API void LogLink(const char *fmt, ...);
+
+	COMPLILERLOG_API void LogCompile(const char *fmt, ...);
+
 
 #ifdef __cplusplus
 }
