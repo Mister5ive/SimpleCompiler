@@ -5,7 +5,7 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimpleCompiler", "SimpleCompiler\SimpleCompiler.vcxproj", "{F05C01A2-D814-4B7E-A378-81B6C47DFCAD}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SyntaxAnalysis_Test", "SyntaxAnalysis\SyntaxAnalysis.vcxproj", "{AFBB9991-7CC3-443E-AB7A-2A7348493F73}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SyntaxAnalysis", "SyntaxAnalysis\SyntaxAnalysis.vcxproj", "{AFBB9991-7CC3-443E-AB7A-2A7348493F73}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ComplilerLog", "ComplilerLog\ComplilerLog.vcxproj", "{928785CB-476A-4293-9BAC-14943B3C1396}"
 EndProject

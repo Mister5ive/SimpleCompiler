@@ -9,11 +9,19 @@
 #define ZERO_MEMORY(VAR) {memset(&VAR, NULL, sizeof(VAR));}
 
 typedef enum {
+	LEX_NORMAL = 0,
+	LEX_LEP = 1
+}scpLexState;
+
+typedef enum {
 	SCP_ERROR_NONE = 0,
 
 	SCP_INVALID_PARAM = -1,
 	SCP_POINTER_NULL = -2,
 	SCP_MALLOC_FAILED = -3,
+	SCP_OPEN_FAILED = -4,
+	SCP_CLOSE_FAILED = -5,
+	SCP_INIT_FAILED = -6
 
 	
 

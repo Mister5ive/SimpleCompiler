@@ -1,6 +1,9 @@
 #ifndef  SYNTAXSTRUCT_H_
 #define  SYNTAXSTRUCT_H_
 #include<iostream>
+#include <windows.h>
+#include <winnt.h>
+
 #include"CompilerDef.h"
 
 //dynamic string
@@ -33,7 +36,7 @@ public:
 			m_SmartString->size = 0;
 			m_SmartString->capacity = initsize;
 		}
-		return 1;
+		return SCP_ERROR_NONE;
 	}
 
 	int free(){
@@ -44,7 +47,7 @@ public:
 				m_SmartString->capacity = 0;
 				m_SmartString->size = 0;
 			}
-			return 1;
+			return SCP_ERROR_NONE;
 		}
 	}
 
@@ -62,7 +65,7 @@ public:
 			m_SmartString->capacity = resetsize;
 			}
 		}
-		return 1;
+		return SCP_ERROR_NONE;
 	}
 
 	int reinit(int newsize) {
@@ -82,7 +85,7 @@ public:
 		m_SmartString->capacity = capacity;
 		return 0;
 	}
-
+	
 	int append(T ch){
 		int count;
 		count = m_SmartString->size + 1;
@@ -110,6 +113,9 @@ public:
 			return m_SmartString->capacity;
 		}
 		return -1;
+	}
+	T*  str() {
+		return m_SmartString->data;
 	}
 };
 
@@ -222,8 +228,10 @@ public:
 		if (m_SmartArray) {
 			for(int i = 0;i < m_SmartArray->size;i++)
 				printf("%s\n", m_SmartArray->data[i]);
-		}
-		
+		}	
+	}
+	T* str(int i) {
+		return m_SmartArray->data[i];
 	}
 };
 
@@ -325,7 +333,12 @@ public:
 			}
 		}
 	}
-
+	int array_size() {
+		return m_tkTable.size();
+	}
+	char* array_str(int token) {
+		return m_tkTable.str(token)->p_word;
+	}
 private:
 	_TkWord **m_Word;//hash map
 	SmartArray<_TkWord> m_tkTable;//dynamic array

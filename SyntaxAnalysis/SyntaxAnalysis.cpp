@@ -1,276 +1,497 @@
 #include"SyntaxStruct.h"
-//{}
-int token;
-int line_num = 0;
-char ch;
-void skip_white_space();
-void getch();
-void parse_comment();
-bool is_digit(char c) {
-	return c >= '0'&&c <= '9';
-}
-bool is_identifier(char c) {
-	return (c == '_') ||
-		   (c >= 'A'&&c <= 'Z') ||
-		   (c >= 'a'&&c <= 'z');
-}
-void preprocess() {
-	while (1) {
-		if (ch == ' ' || ch == '\t' || ch == '\r')
-			skip_white_space();
-		else if (ch == '/') {
-			//读下一个，看是否为/*
-			getch();
-			if (ch == '*')
-				parse_comment();
-			else {
-				ungetc(ch, fin);
-				ch = '/';
-				break;
+
+
+
+
+class LexicalAnalysis {
+private:
+	SmartString<char> *m_TkString;//单词字符串
+	SmartString<char> *m_SourceString;//单词源码字符串
+	//SmartArray<_TkWord> *m_TkArray;//标识符数组
+	TkTable *m_TkHashTable;//单词哈希表
+	FILE *m_file;//源码文件
+	char ch;//当前从文件中get的到字符
+	int token;//单词编码
+	int line_num;//行号
+	int tkvalue;//单词值
+private:
+	void getch() {
+		ch = getc(m_file);
+	}
+	bool is_digit(char c) {
+		return c >= '0'&&c <= '9';
+	}
+	bool is_identifier(char c) {
+		return (c == '_') ||
+			(c >= 'A'&&c <= 'Z') ||
+			(c >= 'a'&&c <= 'z');
+	}
+	void preprocess() {
+		while (1) {
+			if (ch == ' ' || ch == '\t' || ch == '\r')
+				skip_white_space();
+			else if (ch == '/') {
+				//读下一个，看是否为/*
+				getch();
+				if (ch == '*')
+					parse_comment();
+				else {
+					ungetc(ch, m_file);
+					ch = '/';
+					break;
+				}
 			}
-		}
-		else
-			break;
-		
-	}
-}
-void skip_white_space() {
-	while(ch == ' '|| ch =='\t' || ch == '\r') {
-		if(ch == '\r') {
-			getch();
-			if (ch != '\n')  return;
-			line_num++;
-		}
-		//printf();
-		getch();
-	}
-}
-void parse_comment() {
-	getch();
-	do {
-		do {
-			if (ch == '*' || ch == '\0' || ch == '\n')
-				break;
 			else
+				break;
+		}
+	}
+	void skip_white_space() {
+		while (ch == ' ' || ch == '\t' || ch == '\r') {
+			if (ch == '\r') {
 				getch();
-		} while (1);
-		if(ch =='*') {
+				if (ch != '\n')  return;
+				line_num++;
+			}
+			//printf();
 			getch();
-			if(ch == '/') {
+		}
+	}
+	void parse_comment() {
+		getch();
+		do {
+			do {
+				if (ch == '*' || ch == '\0' || ch == '\n')
+					break;
+				else
+					getch();
+			} while (1);
+			if (ch == '*') {
 				getch();
+				if (ch == '/') {
+					getch();
+					return;
+				}
+			}
+			else if (ch == '\n') {
+				line_num++;
+				getch();
+			}
+			else
+			{
+				//error
 				return;
 			}
-		}
-		else if(ch =='\n') {
-			line_num++;
-			getch();
-		}
-		else
-		{
-			//error
-			return;
-		}
-	} while (1);
-}
+		} while (1);
+	}
 
-void parse_identifier() {
-	
-}
-void process() {
-	preprocess();
-	switch(ch) {
-	case 'a':case 'b':case 'c':case 'd':case 'e':case 'f':
-	case 'g':case 'h':case 'i':case 'j':case 'k':case 'l':
-	case 'm':case 'n':case 'o':case 'p':case 'q':case 'r':
-	case 's':case 't':case 'u':case 'v':case 'w':case 'x':
-	case 'y':case 'z':
-	case 'A':case 'B':case 'C':case 'D':case 'E':case 'F':
-	case 'G':case 'H':case 'I':case 'G':case 'K':case 'L':
-	case 'M':case 'N':case 'O':case 'P':case 'Q':case 'R':
-	case 'S':case 'T':case 'U':case 'V':case 'W':case 'X':
-	case 'Y':case 'Z':
-	case '_'://标识符
-	{
-		break;
-	}
-	case '0':case '1':case '2':case '3':case '4':case '5':
-	case '6':case '7':case '8':case '9':
-	{
-		parse_num();
-		token = TK_CINT;
-		break;
-	}
-	case '-':
-	{
+	void parse_identifier() {
+		m_TkString->reset();
+		m_TkString->append(ch);
 		getch();
-		if (ch == '>') {
-			token = TK_POINTSTO;
+		while (is_digit(ch) || is_identifier(ch)) {
+			m_TkString->append(ch);
 			getch();
 		}
-		else
-			token = TK_MINUS;
-		break;
+		m_TkString->append('\0');
 	}
-	case '/':
-	{
-		token = TK_DIVIDE;
-		getch();
-		break;
-	}
-	case '%':
-	{
-		token = TK_MOD;
-		getch();
-		break;
-	}
-	case '=':
-	{
-		getch();
-		if(ch == '=') {
-			token = TK_EQ;
+
+	void parse_num() {
+		m_TkString->reset();
+		m_SourceString->reset();
+		do {
+			m_TkString->append(ch);
+			m_SourceString->append(ch);
 			getch();
+		} while (is_digit(ch));
+		if (ch == '.')
+		{
+			do {
+				m_TkString->append(ch);
+				m_SourceString->append(ch);
+				getch();
+			} while (is_digit(ch));
 		}
-		else
-		token = TK_ASSIGN;
-		break;
+		m_TkString->append('\0');
+		m_SourceString->append('\0');
+		tkvalue = atoi(m_TkString->str());
 	}
-	case '!':
-	{
+
+	void parse_string(char str) {
+		char tmp;//存放转义字符
+		m_TkString->reset();
+		m_SourceString->reset();
+		m_SourceString->append(str);
 		getch();
-		if (ch == '=') {
-			token = TK_NEQ;
-			getch();
+		while (1) {
+			if (ch == str)//字符串结束
+				break;
+			else if (ch == '\\') {//转义字符
+				getch();
+				switch (ch) {
+				case '0':
+					tmp = '\0';
+					break;
+				case 'a':
+					tmp = '\a';
+					break;
+				case 'b':
+					tmp = '\b';
+					break;
+				case 't':
+					tmp = '\t';
+					break;
+				case 'n':
+					tmp = '\n';
+					break;
+				case 'v':
+					tmp = '\v';
+					break;
+				case 'f':
+					tmp = '\f';
+					break;
+				case 'r':
+					tmp = '\r';
+					break;
+				case '\"':
+					tmp = '\"';
+					break;
+				case '\'':
+					tmp = '\'';
+					break;
+				case '\\':
+					tmp = '\\';
+					break;
+				default:
+					tmp = ch;
+					if (tmp >= '!' && tmp <= '~')
+						printf("Illegal Escape String:\'\\%c\'\n",tmp);
+					else
+						printf("Illegal Escape String:\'\\0x%x\'\n", tmp);
+					break;
+				}
+				m_TkString->append(tmp);
+				m_SourceString->append(tmp);
+				getch();
+			}
+			else {
+				m_TkString->append(ch);
+				m_SourceString->append(ch);
+				getch();
+			}
 		}
-		else
-			//error
-			
-		break;
-	}
-	case '>':
-	{
+		m_TkString->append('\0');
+		m_TkString->append(str);
+		m_SourceString->append('\0');
 		getch();
-		if (ch == '=') {
-			token = TK_GEQ;
-			getch();
+
+	}
+	void process() {
+		preprocess();
+		switch (ch) {
+		case 'a':case 'b':case 'c':case 'd':case 'e':case 'f':
+		case 'g':case 'h':case 'i':case 'j':case 'k':case 'l':
+		case 'm':case 'n':case 'o':case 'p':case 'q':case 'r':
+		case 's':case 't':case 'u':case 'v':case 'w':case 'x':
+		case 'y':case 'z':
+		case 'A':case 'B':case 'C':case 'D':case 'E':case 'F':
+		case 'G':case 'H':case 'I':case 'J':case 'K':case 'L':
+		case 'M':case 'N':case 'O':case 'P':case 'Q':case 'R':
+		case 'S':case 'T':case 'U':case 'V':case 'W':case 'X':
+		case 'Y':case 'Z':
+		case '_'://标识符
+		{
+			_TkWord *tp;
+			parse_identifier();
+			printf("%s\n", m_TkString->str());
+			tp = m_TkHashTable->insert(m_TkString->str());
+			token = tp->tkcode;
+			break;
 		}
-		else
-			token = TK_GT;
-		break;
-	}
-	case '<':
-	{
-		getch();
-		if (ch == '=') {
-			token = TK_LEQ;
-			getch();
+		case '0':case '1':case '2':case '3':case '4':case '5':
+		case '6':case '7':case '8':case '9':
+		{
+			parse_num();
+			token = TK_CINT;
+			break;
 		}
-		else
-			token = TK_LT;
-		break;
-	}
-	case '.':
-	{
-		getch();
-		if (ch == '.') {
+		case '+':
+		{
 			getch();
-			if (ch != '.')
-				//error
-				printf();
+			token = TK_PLUS;
+			getch();
+
+		}
+		case '-':
+		{
+			getch();
+			if (ch == '>') {
+				token = TK_POINTSTO;
+				getch();
+			}
 			else
-				token = TK_ELLIPSIS;
-			getch();
-		
+				token = TK_MINUS;
+			break;
 		}
+		case '/':
+		{
+			token = TK_DIVIDE;
+			getch();
+			break;
+		}
+		case '%':
+		{
+			token = TK_MOD;
+			getch();
+			break;
+		}
+		case '=':
+		{
+			getch();
+			if (ch == '=') {
+				token = TK_EQ;
+				getch();
+			}
+			else
+				token = TK_ASSIGN;
+			break;
+		}
+		case '!':
+		{
+			getch();
+			if (ch == '=') {
+				token = TK_NEQ;
+				getch();
+			}
+			else
+				//error
+				printf("error\n");
+				break;
+		}
+		case '>':
+		{
+			getch();
+			if (ch == '=') {
+				token = TK_GEQ;
+				getch();
+			}
+			else
+				token = TK_GT;
+			break;
+		}
+		case '<':
+		{
+			getch();
+			if (ch == '=') {
+				token = TK_LEQ;
+				getch();
+			}
+			else
+				token = TK_LT;
+			break;
+		}
+		case '.':
+		{
+			getch();
+			if (ch == '.') {
+				getch();
+				if (ch != '.')
+					//error
+					printf("error\n");
+				else
+					token = TK_ELLIPSIS;
+				getch();
+
+			}
+			else
+				token = TK_DOT;
+			break;
+		}
+		case '&':
+		{
+			token = TK_AND;
+			getch();
+			break;
+		}
+		case ';':
+		{
+			token = TK_SEMICOLON;
+			getch();
+			break;
+		}
+		case ']':
+		{
+			token = TK_CLOSEBR;
+			getch();
+			break;
+		}
+		case '}':
+		{
+			token = TK_END;
+			getch();
+			break;
+		}
+		case ')':
+		{
+			token = TK_OPENPA;
+			getch();
+			break;
+		}
+		case '[':
+		{
+			token = TK_OPENBR;
+			getch();
+			break;
+		}
+		case '{':
+		{
+			token = TK_BEGIN;
+			getch();
+			break;
+		}
+		case '(':
+		{
+			token = TK_OPENPA;
+			getch();
+			break;
+		}
+		case ',':
+		{
+			token = TK_COMMA;
+			getch();
+			break;
+		}
+		case '*':
+		{
+			token = TK_STAR;
+			getch();
+			break;
+		}
+		case '\'':
+		{
+			//
+			parse_string(ch);
+			token = TK_CCHAR;
+			break;
+		}
+		case '\"':
+		{
+			token = TK_BEGIN;
+			getch();
+			break;
+		}
+		case EOF:
+		{
+			token = TK_EOF;
+			break;
+		}
+		default:
+			printf("error\n");
+			getch();
+			break;
+		}
+	}
+	void token_colored(int lex_state) {
+		HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+		char *pOut = NULL;
+		switch (lex_state) {
+		case LEX_NORMAL:
+			if (token >= TK_IDENT)//标识符
+				SetConsoleTextAttribute(hOut,FOREGROUND_INTENSITY);
+			else if(token >= KW_CHAR)//关键字
+				SetConsoleTextAttribute(hOut, FOREGROUND_GREEN|FOREGROUND_INTENSITY);
+			else if (token >= TK_CINT)//常量
+				SetConsoleTextAttribute(hOut, FOREGROUND_RED | FOREGROUND_GREEN);
+			else //运算符 分隔符
+				SetConsoleTextAttribute(hOut, FOREGROUND_RED | FOREGROUND_INTENSITY);
+			pOut = get_tkstr(token);
+			printf("%s",pOut);
+			break;
+		case LEX_LEP:
+			printf("&c", ch);
+			break;
+		}
+	}
+
+	char* get_tkstr(int token) {
+		if (token > m_TkHashTable->array_size())
+			return NULL;
+		else if (token >= TK_CINT && token <= TK_CSTR)
+			return m_SourceString->str();
 		else
-			token = TK_DOT;
-		break;
+			return m_TkHashTable->array_str(token);
 	}
-	case '&':
-	{
-		token = TK_AND;
+	void skip(int c) {
+		if (token != c)
+			printf("lack of %s\n",get_tkstr(c));
+		process();
+	}
+public:
+	LexicalAnalysis() :token(-1), line_num(0), tkvalue(-1),
+						m_file(NULL), ch(EOF){
+		m_TkString = new SmartString<char>();
+		m_SourceString = new SmartString<char>();
+		//m_TkArray = new SmartArray<_TkWord>();
+		m_TkHashTable = new TkTable();
+
+		
+
+	}
+	~LexicalAnalysis() {
+	
+	}
+	int init() {
+		int ret = 0;
+		if (m_TkString)
+			ret = m_TkString->init(8);
+		if (ret != SCP_ERROR_NONE)
+			return SCP_INIT_FAILED;
+		if (m_SourceString)
+			ret = m_SourceString->init(8);
+		if (ret != SCP_ERROR_NONE)
+			return SCP_INIT_FAILED;
+		/*if (m_TkArray)
+			ret = m_TkArray->init(256);*/
+		if (ret != SCP_ERROR_NONE)
+			return SCP_INIT_FAILED;
+		if (m_TkHashTable)
+			ret = m_TkHashTable->init();
+		m_TkHashTable->init_lex();
+		if (ret != SCP_ERROR_NONE)
+			return SCP_INIT_FAILED;
+		return ret;
+	}
+	int open(char* file_name) {
+		if (file_name == NULL)
+			return SCP_INVALID_PARAM;
+		m_file = fopen(file_name,"r");
+	
+		printf("%d\n", GetLastError());
+		if (m_file == NULL)
+			return SCP_OPEN_FAILED;
+		return SCP_ERROR_NONE;
+	}
+	int close() {
+		if (m_file == NULL)
+			return SCP_CLOSE_FAILED;
+			return fclose(m_file) == 0 ? SCP_ERROR_NONE: SCP_CLOSE_FAILED;
+	}
+	void run() {
 		getch();
-		break;
+		do {
+			process();
+			token_colored(LEX_NORMAL);
+		} while (token!=TK_EOF);
+		printf("\n代码行数：%d行",line_num);
 	}
-	case ';':
-	{
-		token = TK_SEMICOLON;
-		getch();
-		break;
-	}
-	case ']':
-	{
-		token = TK_CLOSEBR;
-		getch();
-		break;
-	}
-	case '}':
-	{
-		token = TK_END;
-		getch();
-		break;
-	}
-	case ')':
-	{
-		token = TK_OPENPA;
-		getch();
-		break;
-	}
-	case '[':
-	{
-		token = TK_OPENBR;
-		getch();
-		break;
-	}
-	case '{':
-	{
-		token = TK_BEGIN;
-		getch();
-		break;
-	}
-	case '(':
-	{
-		token = TK_OPENPA;
-		getch();
-		break;
-	}
-	case ',':
-	{
-		token = TK_COMMA;
-		getch();
-		break;
-	}
-	case '*':
-	{
-		token = TK_STAR;
-		getch();
-		break;
-	}
-	case '\'':
-	{
-		//
-		parse_string(ch);
-		token = TK_CCHAR;
-		break;
-	}
-	case '\':
-	{
-		token = TK_BEGIN;
-		getch();
-		break;
-	}
-	case EOF:
-	{
-		token = TK_EOF;
-		break;
-	}
-	default:
-		error();
-		getch();
-		break;
-	}
-}
+
+};
 int main()
 {
+	LexicalAnalysis test;
+	test.init();
+	test.open("D:\\test.c");
+	test.run();
+	system("pause");
 	//SmartString Test
 	/*SmartString<char> smartstring;
 	smartstring.init(10);
@@ -329,17 +550,17 @@ int main()
 	//smartarray.print();
 	//system("pause");
 
-	/*TkTable tktable;
-	tktable.init();
-	tktable.init_lex();
-	tktable.insert("wc");
-	tktable.insert("wc");
-	tktable.insert("wd");
-	tktable.insert("wc");
-	tktable.insert("wd");
+	//TkTable tktable;
+	//tktable.init();
+	//tktable.init_lex();
+	//tktable.insert("int");
+	//tktable.insert("wc");
+	//tktable.insert("wd");
+	//tktable.insert("wc");
+	//tktable.insert("wd");
 
-	tktable.print();
-	system("pause");*/
+	//tktable.print();
+	//system("pause");
 
 
 }
