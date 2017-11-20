@@ -20,7 +20,7 @@ public:
 	~SmartString() {
 		if (m_SmartString != NULL) {
 			if (m_SmartString->data != NULL) {
-				delete[](m_SmartString->data);
+				::free(m_SmartString->data);
 				m_SmartString->data = NULL;
 				m_SmartString->capacity = 0;
 				m_SmartString->size = 0;
@@ -32,7 +32,7 @@ public:
 	int init(int initsize) {
 		m_SmartString = new _SmartString<T>();
 		if (m_SmartString != NULL){
-			m_SmartString->data = new T[initsize];
+			m_SmartString->data = (T*)malloc(initsize * sizeof(T));
 			m_SmartString->size = 0;
 			m_SmartString->capacity = initsize;
 		}
@@ -42,7 +42,7 @@ public:
 	int free(){
 		if (m_SmartString != NULL){
 			if (m_SmartString->data != NULL) {
-				delete[](m_SmartString->data);
+				::free(m_SmartString->data);
 				m_SmartString->data = NULL;
 				m_SmartString->capacity = 0;
 				m_SmartString->size = 0;
@@ -52,19 +52,13 @@ public:
 	}
 
 	int reset(int resetsize = 8){
-		if (m_SmartString != NULL) {
-			if (m_SmartString->data != NULL) {
-				delete[](m_SmartString->data);
-				m_SmartString->data = NULL;
-				m_SmartString->capacity = 0;
-				m_SmartString->size = 0;
-			}
-			if (m_SmartString->data == NULL){
-			m_SmartString->data = new T[resetsize];
-			m_SmartString->size = 0;
-			m_SmartString->capacity = resetsize;
-			}
-		}
+		int ret = 0;
+		ret = free();
+		if (ret != SCP_ERROR_NONE)
+			return -1;
+		ret = init(8);
+		if (ret != SCP_ERROR_NONE)
+			return -1;
 		return SCP_ERROR_NONE;
 	}
 
@@ -72,15 +66,12 @@ public:
 		if (m_SmartString->data == NULL)
 			return -1;
 		int capacity;
-		char *data = new T[newsize];
+		T *data;
+		capacity = m_SmartString->capacity;
+		while (capacity < newsize) capacity *= 2;
+		data = (T *)realloc(m_SmartString->data,capacity * sizeof(T));
 		if (data == NULL)
 			return -1;
-		capacity = m_SmartString->capacity;
-
-		while (capacity < newsize) capacity *= 2;
-
-		memcpy(data, m_SmartString->data, m_SmartString->size);
-		delete[]m_SmartString->data;
 		m_SmartString->data = data;
 		m_SmartString->capacity = capacity;
 		return 0;

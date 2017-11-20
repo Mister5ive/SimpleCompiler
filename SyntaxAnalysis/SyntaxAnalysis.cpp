@@ -117,10 +117,11 @@ private:
 	}
 
 	void parse_string(char str) {
+
 		char tmp;//存放转义字符
 		m_TkString->reset();
 		m_SourceString->reset();
-		m_SourceString->append(str);
+	//	m_SourceString->append(str);
 		getch();
 		while (1) {
 			if (ch == str)//字符串结束
@@ -179,9 +180,11 @@ private:
 				m_SourceString->append(ch);
 				getch();
 			}
+
 		}
+		//m_TkString->append(str);
+	
 		m_TkString->append('\0');
-		m_TkString->append(str);
 		m_SourceString->append('\0');
 		getch();
 
@@ -218,7 +221,6 @@ private:
 		{
 			getch();
 			token = TK_PLUS;
-			getch();
 			break;
 		}
 		case '-':
@@ -396,16 +398,26 @@ private:
 		switch (lex_state) {
 		case LEX_NORMAL:
 			if (token >= TK_IDENT)//标识符
-				SetConsoleTextAttribute(hOut,FOREGROUND_INTENSITY);
+				SetConsoleTextAttribute(hOut, FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN);
 			else if(token >= KW_CHAR)//关键字
-				SetConsoleTextAttribute(hOut, FOREGROUND_GREEN|FOREGROUND_INTENSITY);
+				SetConsoleTextAttribute(hOut, FOREGROUND_BLUE | FOREGROUND_GREEN);
 			else if (token >= TK_CINT)//常量
 				SetConsoleTextAttribute(hOut, FOREGROUND_RED | FOREGROUND_GREEN);
 			else //运算符 分隔符
-				SetConsoleTextAttribute(hOut, FOREGROUND_RED | FOREGROUND_INTENSITY);
+				SetConsoleTextAttribute(hOut, FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN);
 			pOut = get_tkstr(token);
-			if(token != TK_EOF)
-				printf("%s",pOut);
+			if (token != TK_EOF)
+			{
+				if(token == TK_CSTR)
+					printf("\"", pOut);
+				if (token == TK_CCHAR)
+					printf("\"", pOut);
+				printf("%s", pOut);
+				if (token == TK_CSTR)
+					printf("\"", pOut);
+				if (token == TK_CCHAR)
+					printf("\"", pOut);
+			}
 			break;
 		case LEX_LEP:
 			printf("&c", ch);
@@ -482,16 +494,24 @@ public:
 			process();
 			token_colored(LEX_NORMAL);
 		} while (token!=TK_EOF);
+		HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+		SetConsoleTextAttribute(hOut,
+			BACKGROUND_GREEN |
+			BACKGROUND_INTENSITY);
 		printf("\n\n\n代码行数：%d行",line_num);
 	}
 
 };
-int main()
+int main(int argc,char** argv)
 {
+	if (argc != 2)
+		return -1;
+	char* file = argv[1];
 	LexicalAnalysis test;
 	test.init();
-	test.open("D:\\test.c");
+	test.open(file);
 	test.run();
+	test.close();
 	system("pause");
 	//SmartString Test
 	/*SmartString<char> smartstring;
