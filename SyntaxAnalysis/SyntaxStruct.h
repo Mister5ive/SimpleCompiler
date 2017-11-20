@@ -238,24 +238,24 @@ public:
 
 class TkTable{
 public:
-	TkTable() :m_Word(NULL){
+	TkTable() :m_HashMap(NULL){
 		m_tkTable.init(256);
 		
 	}
 	~TkTable(){
 		
-		if (m_Word != NULL) {
-			free(m_Word);
-			m_Word = NULL;
+		if (m_HashMap != NULL) {
+			free(m_HashMap);
+			m_HashMap = NULL;
 		}
 	}
 
 	//init
 	int init() {
-		if (m_Word == NULL) {
-			m_Word = new _TkWord*[TABLEMAX];
+		if (m_HashMap == NULL) {
+			m_HashMap = new _TkWord*[TABLEMAX];
 			for (int i = 0; i < TABLEMAX; i++) {
-				ZERO_MEMORY(m_Word[i]);
+				ZERO_MEMORY(m_HashMap[i]);
 			}
 				
 		}
@@ -276,8 +276,8 @@ public:
 		m_tkTable.add(tw);
 		keynu = elf_hash(tw->p_word);
 		
-		tw->next = m_Word[keynu];
-		m_Word[keynu] = tw;
+		tw->next = m_HashMap[keynu];
+		m_HashMap[keynu] = tw;
 		return tw;
 	}
 	//find
@@ -285,7 +285,7 @@ public:
 		int keynu;
 		keynu = elf_hash(key);
 		_TkWord *tp = NULL, *tp1;
-		for (tp1 = m_Word[keynu]; tp1;tp1 = tp1->next) {
+		for (tp1 = m_HashMap[keynu]; tp1;tp1 = tp1->next) {
 			if (strcmp(key, tp1->p_word) == 0) {
 				//token = tp1->tkcode;
 				tp = tp1;
@@ -308,8 +308,8 @@ public:
 		if (tmpTkWord == NULL) {
 			length = strlen(key);
 			tmpTkWord = new _TkWord[sizeof(_TkWord) + length +1];
-			tmpTkWord->next = m_Word[keynu];
-			m_Word[keynu] = tmpTkWord;
+			tmpTkWord->next = m_HashMap[keynu];
+			m_HashMap[keynu] = tmpTkWord;
 			m_tkTable.add(tmpTkWord);
 			tmpTkWord->tkcode = m_tkTable.get_count() - 1;
 			s = (char*)tmpTkWord + sizeof(_TkWord);
@@ -321,9 +321,9 @@ public:
 	}
 	//test
 	void print() {
-		if (m_Word != NULL) {
+		if (m_HashMap != NULL) {
 			for (int i = 0; i < TABLEMAX; i++) {
-				_TkWord *tmp = m_Word[i];
+				_TkWord *tmp = m_HashMap[i];
 				while ( tmp != NULL) {
 					printf("key:%d, str:%s , token:%d\n",i,tmp->p_word,tmp->tkcode);
 					tmp = tmp->next;
@@ -340,7 +340,7 @@ public:
 		return m_tkTable.str(token)->p_word;
 	}
 private:
-	_TkWord **m_Word;//hash map
+	_TkWord **m_HashMap;//hash map
 	SmartArray<_TkWord> m_tkTable;//dynamic array
 	
 private:

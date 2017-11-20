@@ -52,7 +52,7 @@ private:
 				if (ch != '\n')  return;
 				line_num++;
 			}
-			//printf();
+			printf("%c",ch);
 			getch();
 		}
 	}
@@ -164,13 +164,14 @@ private:
 				default:
 					tmp = ch;
 					if (tmp >= '!' && tmp <= '~')
-						printf("Illegal Escape String:\'\\%c\'\n",tmp);
+						printf("%s,%s,%d Illegal Escape String:\'\\%c\'\n",tmp, __FILE__, __FUNCTION__, __LINE__);
 					else
-						printf("Illegal Escape String:\'\\0x%x\'\n", tmp);
+						printf("%s,%s,%d Illegal Escape String:\'\\0x%x\'\n", tmp, __FILE__, __FUNCTION__, __LINE__);
 					break;
 				}
-				m_TkString->append(tmp);
-				m_SourceString->append(tmp);
+
+				//m_TkString->append(tmp);
+				//m_SourceString->append(tmp);
 				getch();
 			}
 			else {
@@ -202,7 +203,6 @@ private:
 		{
 			_TkWord *tp;
 			parse_identifier();
-			printf("%s\n", m_TkString->str());
 			tp = m_TkHashTable->insert(m_TkString->str());
 			token = tp->tkcode;
 			break;
@@ -219,7 +219,7 @@ private:
 			getch();
 			token = TK_PLUS;
 			getch();
-
+			break;
 		}
 		case '-':
 		{
@@ -264,7 +264,7 @@ private:
 			}
 			else
 				//error
-				printf("error\n");
+				printf("%s,%s,%d error\n", __FILE__, __FUNCTION__, __LINE__);
 				break;
 		}
 		case '>':
@@ -296,7 +296,7 @@ private:
 				getch();
 				if (ch != '.')
 					//error
-					printf("error\n");
+					printf("%s,%s,%d error\n", __FILE__, __FUNCTION__, __LINE__);
 				else
 					token = TK_ELLIPSIS;
 				getch();
@@ -332,7 +332,7 @@ private:
 		}
 		case ')':
 		{
-			token = TK_OPENPA;
+			token = TK_CLOSEPA;
 			getch();
 			break;
 		}
@@ -375,8 +375,8 @@ private:
 		}
 		case '\"':
 		{
-			token = TK_BEGIN;
-			getch();
+			parse_string(ch);
+			token = TK_CSTR;
 			break;
 		}
 		case EOF:
@@ -385,7 +385,7 @@ private:
 			break;
 		}
 		default:
-			printf("error\n");
+			printf("%s,%s,%d error\n", __FILE__, __FUNCTION__, __LINE__);
 			getch();
 			break;
 		}
@@ -404,7 +404,8 @@ private:
 			else //运算符 分隔符
 				SetConsoleTextAttribute(hOut, FOREGROUND_RED | FOREGROUND_INTENSITY);
 			pOut = get_tkstr(token);
-			printf("%s",pOut);
+			if(token != TK_EOF)
+				printf("%s",pOut);
 			break;
 		case LEX_LEP:
 			printf("&c", ch);
@@ -426,7 +427,7 @@ private:
 		process();
 	}
 public:
-	LexicalAnalysis() :token(-1), line_num(0), tkvalue(-1),
+	LexicalAnalysis() :token(-1), line_num(1), tkvalue(-1),
 						m_file(NULL), ch(EOF){
 		m_TkString = new SmartString<char>();
 		m_SourceString = new SmartString<char>();
@@ -463,9 +464,9 @@ public:
 	int open(char* file_name) {
 		if (file_name == NULL)
 			return SCP_INVALID_PARAM;
-		m_file = fopen(file_name,"r");
+		m_file = fopen(file_name,"rb+");
 	
-		printf("%d\n", GetLastError());
+		//printf("%d\n", GetLastError());
 		if (m_file == NULL)
 			return SCP_OPEN_FAILED;
 		return SCP_ERROR_NONE;
@@ -481,7 +482,7 @@ public:
 			process();
 			token_colored(LEX_NORMAL);
 		} while (token!=TK_EOF);
-		printf("\n代码行数：%d行",line_num);
+		printf("\n\n\n代码行数：%d行",line_num);
 	}
 
 };
