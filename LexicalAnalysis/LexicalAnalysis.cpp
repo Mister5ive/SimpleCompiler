@@ -1,7 +1,6 @@
 // LexicalAnalysis.cpp : 定义 DLL 应用程序的导出函数。
 //
 
-#include "stdafx.h"
 #include "LexicalAnalysis.h"
 
 //动态字符串
@@ -233,9 +232,8 @@ TkTable::TkTable():m_Word(NULL) {
 
 }
 TkTable::~TkTable() {
-
 	if (m_Word != NULL) {
-		free(m_Word);
+		::free(m_Word);
 		m_Word = NULL;
 	}
 }
