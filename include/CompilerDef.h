@@ -9,17 +9,25 @@
 #define ZERO_MEMORY(VAR) {memset(&VAR, NULL, sizeof(VAR));}
 
 typedef enum {
+	LEX_NORMAL = 0,
+	LEX_LEP = 1
+}scpLexState;
+
+typedef enum {
 	SCP_ERROR_NONE = 0,
 
 	SCP_INVALID_PARAM = -1,
 	SCP_POINTER_NULL = -2,
 	SCP_MALLOC_FAILED = -3,
+	SCP_OPEN_FAILED = -4,
+	SCP_CLOSE_FAILED = -5,
+	SCP_INIT_FAILED = -6
 
-	
+
 
 }scpStatus;
 
-typedef enum{
+typedef enum {
 	TK_PLUS,
 	TK_MINUS,
 	TK_STAR,
@@ -32,7 +40,7 @@ typedef enum{
 	TK_GT,
 	TK_GEQ,
 	TK_ASSIGN,
-	TK_EPOINTSTO,
+	TK_POINTSTO,
 	TK_DOT,
 	TK_AND,
 	TK_OPENPA,
@@ -51,6 +59,7 @@ typedef enum{
 	KW_CHAR,
 	KW_SHORT,
 	KW_INT,
+	KW_BOOL,
 	KW_VOID,
 	KW_STRUCT,
 	KW_IF,
@@ -63,7 +72,7 @@ typedef enum{
 	KW_ALIGN,
 	KW_CDECL,
 	KW_STDCALL,
-	TK_IDENT 
+	TK_IDENT
 }eTokenCode;
 
 
@@ -135,7 +144,7 @@ struct _SmartArray {
 
 
 
-typedef struct _Tk_Word{
+typedef struct _Tk_Word {
 	int tkcode;//word code
 	struct _Tk_Word *next;//conflict word
 	char *p_word;//word sring
@@ -158,7 +167,7 @@ static _TkWord keywords[] = {
 	{ TK_GT,		NULL	,">",					NULL,	NULL },
 	{ TK_GEQ,		NULL	,">=",					NULL,	NULL },
 	{ TK_ASSIGN,	NULL	,"=",					NULL,	NULL },
-	{ TK_EPOINTSTO,	NULL	,"->",					NULL,	NULL },
+	{ TK_POINTSTO,	NULL	,"->",					NULL,	NULL },
 	{ TK_DOT,		NULL	,".",					NULL,	NULL },
 	{ TK_AND,		NULL	,"&",					NULL,	NULL },
 	{ TK_OPENPA,	NULL	,"(",					NULL,	NULL },
@@ -177,6 +186,7 @@ static _TkWord keywords[] = {
 	{ KW_CHAR,		NULL	,"char",				NULL,	NULL },
 	{ KW_SHORT,		NULL	,"short",				NULL,	NULL },
 	{ KW_INT,		NULL	,"int",					NULL,	NULL },
+	{ KW_BOOL,		NULL	,"bool",				NULL,	NULL },
 	{ KW_VOID,		NULL	,"void",				NULL,	NULL },
 	{ KW_STRUCT,	NULL	,"struct",				NULL,	NULL },
 	{ KW_IF,		NULL	,"if",					NULL,	NULL },

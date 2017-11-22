@@ -6,8 +6,6 @@
 
 
 
-
-
 /*
 *动态字符串
 */
@@ -27,6 +25,7 @@ public:
 	void print();
 	int size();
 	int capacity();
+	T*  str();
 };
 
 /*
@@ -49,6 +48,7 @@ public:
 	int get_count();
 	int size();
 	int capacity();
+	T* str(int i);
 	void print();
 };
 
@@ -75,40 +75,45 @@ public:
 	_TkWord* insert(char* key);
 	//test
 	void print();
+	int array_size();
+	char* array_str(int token);
 private:
 	int elf_hash(char *key);
 };
 
-	//词法分析类
-	class LexicalAnalysisImp:public LexicalAnalysis {
-	private:
-		void getch();
-		void preprocess();
-		void skip_white_space();
-		void parse_comment();
-		void parse_identifier();
-		void parse_num();
-		void parse_string(char str);
-		void process();
-		void token_colored(int lex_state);
-		char* get_tkstr(int token);
-		void skip(int c);
-	public:
-		LexicalAnalysisImp();
-		~LexicalAnalysisImp();
-		int init();
-		int open(char* file_name);
-		int close();
-		void run();
-	private:
-		SmartString<char> *m_TkString;//单词字符串
-		SmartString<char> *m_SourceString;//单词源码字符串
-		TkTable *m_TkHashTable;//单词哈希表
-		FILE *m_file;//源码文件
-		char ch;//当前从文件中get的到字符
-		int token;//单词编码
-		int line_num;//行号
-		int tkvalue;//单词值
-	};
+
+//词法分析类
+class LexicalAnalysisImp:public LexicalAnalysis {
+private:
+	void getch();
+	bool is_digit(char c);
+	bool is_identifier(char c);
+	void preprocess();
+	void skip_white_space();
+	void parse_comment();
+	void parse_identifier();
+	void parse_num();
+	void parse_string(char str);
+	void process();
+	void token_colored(int lex_state);
+	char* get_tkstr(int token);
+	void skip(int c);
+public:
+	LexicalAnalysisImp();
+	~LexicalAnalysisImp();
+	int init();
+	int open(char* file_name);
+	int close();
+	void run();
+private:
+	SmartString<char> *m_TkString;//单词字符串
+	SmartString<char> *m_SourceString;//单词源码字符串
+	TkTable *m_TkHashTable;//单词哈希表
+	FILE *m_file;//源码文件
+	char ch;//当前从文件中get的到字符
+	int token;//单词编码
+	int line_num;//行号
+	int tkvalue;//单词值
+};
 #endif
 
