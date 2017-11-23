@@ -203,7 +203,6 @@ static _TkWord keywords[] = {
 	{ 0,			NULL	,NULL,					NULL,	NULL },
 };
 
-//LexicalAnalysisLog
-typedef void(*LogFunction)(const char* fmt, ...);
+
 #endif // ! COMPILERDEF_H_
 

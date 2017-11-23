@@ -3,6 +3,8 @@
 #else
 #define LEXICALANALYSIS_API __declspec(dllimport)
 #endif
+//LexicalAnalysisLog
+typedef void(*LogFunction)(const char* fmt, ...);
 
 class LexicalAnalysis {
 private:
@@ -35,7 +37,7 @@ extern "C" {
 
 	LEXICALANALYSIS_API LexicalAnalysis* LexicalAnalysisCreate(void);
 	LEXICALANALYSIS_API void LexicalAnalysisDestroy(LexicalAnalysis*);
-
+	LEXICALANALYSIS_API void SetLogFunction(LogFunction Logmsg, LogFunction Logerr, LogFunction LogWarnig, LogFunction LogLink, LogFunction LogCompile);
 
 #ifdef __cplusplus
 }

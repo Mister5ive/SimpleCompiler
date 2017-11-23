@@ -2,6 +2,14 @@
 #include "stdafx.h"
 #include "LexicalAnalysis.h"
 
+
+static LogFunction	g_LogMsg = NULL;
+static LogFunction	g_LogError = NULL;
+static LogFunction	g_LogWarning = NULL;
+static LogFunction	g_LogLink = NULL;
+static LogFunction	g_LogCompile = NULL;
+
+
 LexicalAnalysis* LexicalAnalysisCreate(void) {
 	LexicalAnalysis* pInstance = new LexicalAnalysisImp();
 	if (pInstance)
@@ -11,6 +19,16 @@ void LexicalAnalysisDestroy(LexicalAnalysis* pInstance) {
 	if (pInstance)
 		delete pInstance;
 }
+
+void SetLogFunction(LogFunction Logmsg, LogFunction Logerr, LogFunction LogWarnig, LogFunction LogLink, LogFunction LogCompile)
+{
+	g_LogMsg = Logmsg;
+	g_LogError = Logerr;
+	g_LogWarning = LogWarnig;
+	g_LogLink = LogLink;
+	g_LogCompile = LogCompile;
+}
+
 
 //动态字符串
 template<typename T>
@@ -104,7 +122,8 @@ template<typename T>
 void SmartString<T>::print() {
 	if (m_SmartString != NULL) {
 		for (int i = 0; i < m_SmartString->size; i++)
-			::printf("%c", m_SmartString->data[i]);
+			//::printf("%c", m_SmartString->data[i]);
+			LogMessage("SmartString.data[%d],%c",i, m_SmartString->data[i]);
 	}
 }
 
@@ -238,7 +257,8 @@ template<typename T>
 void SmartArray<T>::print() {
 	if (m_SmartArray) {
 		for (int i = 0; i < m_SmartArray->size; i++)
-			printf("%s\n", m_SmartArray->data[i]);
+			//printf("%s\n", m_SmartArray->data[i]);
+			LogMessage("SmartArray.data[%d]:%s",i, m_SmartArray->size);
 	}
 }
 
@@ -329,10 +349,12 @@ void TkTable::print() {
 		for (int i = 0; i < TABLEMAX; i++) {
 			_TkWord *tmp = m_Word[i];
 			while (tmp != NULL) {
-				printf("key:%d, str:%s , token:%d\n", i, tmp->p_word, tmp->tkcode);
+				//printf("TkTable key:%d, str:%s , token:%d\n", i, tmp->p_word, tmp->tkcode);
+				LogMessage("key:%d, str:%s , token:%d\n", i, tmp->p_word, tmp->tkcode);
 				tmp = tmp->next;
 				if (tmp != NULL)
-					printf("-----conflict\n");
+					//printf("-----conflict\n");
+					LogMessage("conflict");
 			}
 		}
 	}
@@ -512,9 +534,11 @@ void LexicalAnalysisImp::parse_string(char str) {
 			default:
 				tmp = ch;
 				if (tmp >= '!' && tmp <= '~')
-					printf("%s,%s,%d Illegal Escape String:\'\\%c\'\n", tmp, __FILE__, __FUNCTION__, __LINE__);
+					//printf("%s,%s,%d Illegal Escape String:\'\\%c\'\n", tmp, __FILE__, __FUNCTION__, __LINE__);
+					LogCompile("%s,%s,%d Illegal Escape String:\'\\%c\'", tmp, __FILE__, __FUNCTION__, __LINE__);
 				else
-					printf("%s,%s,%d Illegal Escape String:\'\\0x%x\'\n", tmp, __FILE__, __FUNCTION__, __LINE__);
+					//printf("%s,%s,%d Illegal Escape String:\'\\0x%x\'\n", tmp, __FILE__, __FUNCTION__, __LINE__);
+					LogCompile("%s,%s,%d Illegal Escape String:\'\\0x%x\'", tmp, __FILE__, __FUNCTION__, __LINE__);
 				break;
 			}
 
@@ -612,7 +636,8 @@ void LexicalAnalysisImp::process() {
 		}
 		else
 			//error
-			printf("%s,%s,%d error\n", __FILE__, __FUNCTION__, __LINE__);
+			//printf("%s,%s,%d error\n", __FILE__, __FUNCTION__, __LINE__);
+			LogCompile("%s,%s,%d Token not support ", __FILE__, __FUNCTION__, __LINE__);
 		break;
 	}
 	case '>':
@@ -644,7 +669,8 @@ void LexicalAnalysisImp::process() {
 			getch();
 			if (ch != '.')
 				//error
-				printf("%s,%s,%d error\n", __FILE__, __FUNCTION__, __LINE__);
+				//printf("%s,%s,%d error\n", __FILE__, __FUNCTION__, __LINE__);
+				LogCompile("%s,%s,%d Token not support ", __FILE__, __FUNCTION__, __LINE__);
 			else
 				token = TK_ELLIPSIS;
 			getch();
@@ -733,7 +759,8 @@ void LexicalAnalysisImp::process() {
 		break;
 	}
 	default:
-		printf("%s,%s,%d error\n", __FILE__, __FUNCTION__, __LINE__);
+		//printf("%s,%s,%d error\n", __FILE__, __FUNCTION__, __LINE__);
+		LogCompile("%s,%s,%d Token not support ", __FILE__, __FUNCTION__, __LINE__);
 		getch();
 		break;
 	}
@@ -831,4 +858,110 @@ void LexicalAnalysisImp::run() {
 		BACKGROUND_GREEN |
 		BACKGROUND_INTENSITY);
 	printf("\n\n\n代码行数：%d行", line_num);
+}
+
+//Log
+
+void LogMessage(const char* fmt, ...)
+{
+	va_list arg;
+	va_start(arg, fmt);
+	if (g_LogMsg == NULL)
+	{
+		char msg[MSG_LEN];
+		vsprintf(msg, fmt, arg);
+		strcat(msg, "\n");
+		printf(msg, arg);
+	}
+	else
+	{
+		char msg[MSG_LEN];
+		vsprintf(msg, fmt, arg);
+		g_LogMsg(msg);
+	}
+	va_end(arg);
+}
+
+void LogError(const char *fmt, ...)
+{
+	va_list arg;
+	va_start(arg, fmt);
+	if (g_LogError == NULL)
+	{
+		char msg[MSG_LEN];
+		vsprintf(msg, fmt, arg);
+		strcat(msg, "\n");
+		printf(msg, arg);
+
+	}
+	else
+	{
+		char msg[MSG_LEN];
+		vsprintf(msg, fmt, arg);
+		g_LogError(msg);
+	}
+	va_end(arg);
+}
+
+void LogWarning(const char *fmt, ...)
+{
+	va_list arg;
+	va_start(arg, fmt);
+	if (g_LogWarning == NULL)
+	{
+		char msg[MSG_LEN];
+		vsprintf(msg, fmt, arg);
+		strcat(msg, "\n");
+		printf(msg, arg);
+
+	}
+	else
+	{
+		char msg[MSG_LEN];
+		vsprintf(msg, fmt, arg);
+		g_LogWarning(msg);
+	}
+	va_end(arg);
+}
+
+void LogLink(const char *fmt, ...)
+{
+	va_list arg;
+	va_start(arg, fmt);
+	if (g_LogLink == NULL)
+	{
+		char msg[MSG_LEN];
+		vsprintf(msg, fmt, arg);
+		strcat(msg, "\n");
+		printf(msg, arg);
+
+	}
+	else
+	{
+		char msg[MSG_LEN];
+		vsprintf(msg, fmt, arg);
+		g_LogLink(msg);
+	}
+	va_end(arg);
+}
+
+void LogCompile(const char *fmt, ...)
+{
+	va_list arg;
+	va_start(arg, fmt);
+	if (g_LogCompile == NULL)
+	{
+		char msg[MSG_LEN];
+		vsprintf(msg, fmt, arg);
+		strcat(msg, "\n");
+		printf(msg, arg);
+
+	}
+	else
+	{
+		char msg[MSG_LEN];
+		vsprintf(msg, fmt, arg);
+		g_LogCompile(msg);
+	}
+	va_end(arg);
 }
