@@ -2,6 +2,7 @@
 #define  COMPILERDEF_H_
 
 #define TABLEMAX 1024
+#define MSG_LEN 256
 
 #define CODEC_CHECK_RETURN(P)  if(!P){LogError("%s : %s invalid param, line:%d!",__FILE__, __FUNCTION__, __LINE__);return;}
 #define CODEC_CHECK_WHILE(P)  if(!P){LogError("%s : %s invalid param, line:%d!",__FILE__, __FUNCTION__, __LINE__); Sleep(10);continue;}
@@ -202,5 +203,7 @@ static _TkWord keywords[] = {
 	{ 0,			NULL	,NULL,					NULL,	NULL },
 };
 
+//LexicalAnalysisLog
+typedef void(*LogFunction)(const char* fmt, ...);
 #endif // ! COMPILERDEF_H_
 
