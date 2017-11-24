@@ -26,7 +26,7 @@ extern "C" {
 
 	COMPLILERLOG_API void LogError(const char *fmt, ...);
 
-	COMPLILERLOG_API void LogWarning(const char *fmt, ...);
+	COMPLILERLOG_API void LogWarrning(const char *fmt, ...);
 
 	COMPLILERLOG_API void LogMessage(const char *fmt, ...);
 

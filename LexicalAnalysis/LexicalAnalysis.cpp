@@ -2,16 +2,14 @@
 #include "stdafx.h"
 #include "LexicalAnalysis.h"
 
-
 static LogFunction	g_LogMsg = NULL;
 static LogFunction	g_LogError = NULL;
 static LogFunction	g_LogWarning = NULL;
 static LogFunction	g_LogLink = NULL;
 static LogFunction	g_LogCompile = NULL;
 
-
 LexicalAnalysis* LexicalAnalysisCreate(void) {
-	LexicalAnalysis* pInstance = new LexicalAnalysisImp();
+	LexicalAnalysis* pInstance = new LexicalAnalysisImp[sizeof(class LexicalAnalysisImp)];
 	if (pInstance)
 		return pInstance;
 }
@@ -51,42 +49,54 @@ template<typename T>
 int SmartString<T>::init(int initsize) {
 	m_SmartString = new _SmartString<T>();
 	if (m_SmartString != NULL) {
-		m_SmartString->data = new T[initsize];
+		//m_SmartString->data = new T[initsize];
+		m_SmartString->data = (T*) malloc(sizeof(T)* initsize);
 		m_SmartString->size = 0;
 		m_SmartString->capacity = initsize;
 	}
-	return 1;
+	return 0;
 }
 
 template<typename T>
 int SmartString<T>::free() {
 	if (m_SmartString != NULL) {
 		if (m_SmartString->data != NULL) {
-			delete[](m_SmartString->data);
+			//delete[](m_SmartString->data);//bug
+			::free(m_SmartString->data);//bug
 			m_SmartString->data = NULL;
 			m_SmartString->capacity = 0;
 			m_SmartString->size = 0;
 		}
-		return 1;
+		return 0;
 	}
 }
 
 template<typename T>
 int SmartString<T>::reset(int resetsize) {
-	if (m_SmartString != NULL) {
-		if (m_SmartString->data != NULL) {
-			delete[](m_SmartString->data);
-			m_SmartString->data = NULL;
-			m_SmartString->capacity = 0;
-			m_SmartString->size = 0;
-		}
-		if (m_SmartString->data == NULL) {
-			m_SmartString->data = new T[resetsize];
-			m_SmartString->size = 0;
-			m_SmartString->capacity = resetsize;
-		}
-	}
-	return 1;
+	//if (m_SmartString != NULL) {
+	//	if (m_SmartString->data != NULL) {
+	//		//delete[](m_SmartString->data);
+	//		::free(m_SmartString->data);
+	//		m_SmartString->data = NULL;
+	//		m_SmartString->capacity = 0;
+	//		m_SmartString->size = 0;
+	//	}
+	//	if (m_SmartString->data == NULL) {
+	//		//m_SmartString->data = new T[resetsize];
+	//		m_SmartString->size = 0;
+	//		m_SmartString->capacity = resetsize;
+	//	}
+	//}
+	int capacity;
+	T *data;
+	capacity = m_SmartString->capacity;
+	while (resetsize > capacity) capacity *= 2;
+	data = (T*)realloc(m_SmartString->data, capacity);
+	if (!data)
+		return -1;
+	m_SmartString->capacity = capacity;
+	m_SmartString->data = data;
+	return 0;
 }
 
 template<typename T>
@@ -94,7 +104,7 @@ int SmartString<T>::reinit(int newsize) {
 	if (m_SmartString->data == NULL)
 		return -1;
 	int capacity;
-	char *data = new T[newsize];
+	T *data = (T*)malloc(sizeof(T) * newsize);
 	if (data == NULL)
 		return -1;
 	capacity = m_SmartString->capacity;
@@ -102,7 +112,7 @@ int SmartString<T>::reinit(int newsize) {
 	while (capacity < newsize) capacity *= 2;
 
 	memcpy(data, m_SmartString->data, m_SmartString->size);
-	delete[]m_SmartString->data;
+	::free(m_SmartString->data);
 	m_SmartString->data = data;
 	m_SmartString->capacity = capacity;
 	return 0;
@@ -265,13 +275,12 @@ void SmartArray<T>::print() {
 //单词表
 TkTable::TkTable():m_Word(NULL) {
 	m_tkTable.init(256);
-
 }
 TkTable::~TkTable() {
-	if (m_Word != NULL) {
+	/*if (m_Word != NULL) {
 		::free(m_Word);
 		m_Word = NULL;
-	}
+	}*/
 }
 
 //init
@@ -281,11 +290,20 @@ int TkTable::init() {
 		for (int i = 0; i < TABLEMAX; i++) {
 			ZERO_MEMORY(m_Word[i]);
 		}
-
 	}
 	return 0;
 }
+//uninit
+int TkTable::free() {
+	if (m_Word != NULL) {
+		::free(m_Word);
+		m_Word = NULL;
+	}
+	int ret = -1;
+	ret = m_tkTable.free();
 
+	return ret;
+}
 //单词表初始化
 void TkTable::init_lex() {
 	_TkWord *tmp;// = new _TkWord;
@@ -386,8 +404,29 @@ int TkTable::elf_hash(char *key) {
 	}
 
 //词法分析类
-LexicalAnalysisImp::LexicalAnalysisImp() {}
-LexicalAnalysisImp::~LexicalAnalysisImp() {}
+LexicalAnalysisImp::LexicalAnalysisImp():token(-1), line_num(1), tkvalue(-1),
+					m_file(NULL), ch(EOF) {
+	m_TkString = new SmartString<char>();
+	m_SourceString = new SmartString<char>();
+	m_TkHashTable = new TkTable();
+}
+LexicalAnalysisImp::~LexicalAnalysisImp() {
+	if (m_TkString) {
+		m_TkString->free();
+		delete m_TkString;
+		m_TkString = NULL;
+	}
+	if (m_SourceString) {
+		m_SourceString->free();//bug
+		delete m_SourceString;
+		m_SourceString = NULL;
+	}
+	if (m_TkHashTable) {
+		m_TkHashTable->free();
+		delete m_TkHashTable;
+		m_TkHashTable = NULL;
+	}
+}
 void LexicalAnalysisImp::getch() {
 	ch = getc(m_file);
 }
@@ -836,7 +875,6 @@ int LexicalAnalysisImp::open(char* file_name) {
 	if (file_name == NULL)
 		return SCP_INVALID_PARAM;
 	m_file = fopen(file_name, "rb+");
-
 	//printf("%d\n", GetLastError());
 	if (m_file == NULL)
 		return SCP_OPEN_FAILED;
@@ -858,10 +896,10 @@ void LexicalAnalysisImp::run() {
 		BACKGROUND_GREEN |
 		BACKGROUND_INTENSITY);
 	printf("\n\n\n代码行数：%d行", line_num);
+	LogMessage("\n\n\n代码行数：%d行", line_num);
 }
 
 //Log
-
 void LogMessage(const char* fmt, ...)
 {
 	va_list arg;

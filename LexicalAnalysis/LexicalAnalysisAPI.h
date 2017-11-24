@@ -7,7 +7,7 @@
 typedef void(*LogFunction)(const char* fmt, ...);
 
 class LexicalAnalysis {
-private:
+public:
 	virtual void getch() = 0;
 	virtual bool is_digit(char c) = 0;
 	virtual bool is_identifier(char c) = 0;

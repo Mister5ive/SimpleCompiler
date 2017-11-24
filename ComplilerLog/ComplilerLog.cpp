@@ -250,7 +250,7 @@ void LogError(const char *fmt, ...)
 	va_end(args);
 }
 
-void LogWarrning(const char *fmt, ...)
+void LogWarning(const char *fmt, ...)
 {
 	if ((g_logLevel & PRINT_WARRNING) == 0)
 	{

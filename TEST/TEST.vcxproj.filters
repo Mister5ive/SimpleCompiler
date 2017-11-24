@@ -18,7 +18,7 @@
     <ClCompile Include="LogTest.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="CodecLog.cpp">
+    <ClCompile Include="LexicalAnalysisTest.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

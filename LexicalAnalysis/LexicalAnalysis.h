@@ -4,8 +4,15 @@
 #include "LexicalAnalysisAPI.h"
 #include "../include/CompilerDef.h"
 
+/*
+*Log
+*/
 
-
+void LogCompile(const char *fmt, ...);
+void LogLink(const char *fmt, ...);
+void LogWarning(const char *fmt, ...);
+void LogError(const char *fmt, ...);
+void LogMessage(const char* fmt, ...);
 /*
 *动态字符串
 */
@@ -33,7 +40,7 @@ public:
 */
 template<typename T>
 class SmartArray {
-private:
+public:
 	_SmartArray<T> *m_SmartArray;
 	int count;
 public:
@@ -57,7 +64,7 @@ public:
 */
 
 class TkTable {
-private:
+public:
 	_TkWord **m_Word;//hash map
 	SmartArray<_TkWord> m_tkTable;//dynamic array
 public:
@@ -65,6 +72,8 @@ public:
 	~TkTable();
 	//init
 	int init();
+	//uninit
+	int free();
 	//单词表初始化
 	void init_lex();
 	//direct insert key
@@ -84,7 +93,7 @@ private:
 
 //词法分析类
 class LexicalAnalysisImp:public LexicalAnalysis {
-private:
+public:
 	void getch();
 	bool is_digit(char c);
 	bool is_identifier(char c);
@@ -105,7 +114,7 @@ public:
 	int open(char* file_name);
 	int close();
 	void run();
-private:
+public:
 	SmartString<char> *m_TkString;//单词字符串
 	SmartString<char> *m_SourceString;//单词源码字符串
 	TkTable *m_TkHashTable;//单词哈希表
