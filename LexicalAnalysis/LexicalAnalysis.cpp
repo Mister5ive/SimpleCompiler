@@ -9,13 +9,16 @@ static LogFunction	g_LogLink = NULL;
 static LogFunction	g_LogCompile = NULL;
 
 LexicalAnalysis* LexicalAnalysisCreate(void) {
-	LexicalAnalysis* pInstance = new LexicalAnalysisImp[sizeof(class LexicalAnalysisImp)];
+	LexicalAnalysis* pInstance = new LexicalAnalysisImp();
 	if (pInstance)
 		return pInstance;
 }
 void LexicalAnalysisDestroy(LexicalAnalysis* pInstance) {
-	if (pInstance)
+	if (pInstance) {
 		delete pInstance;
+		pInstance = NULL;
+	}
+		
 }
 
 void SetLogFunction(LogFunction Logmsg, LogFunction Logerr, LogFunction LogWarnig, LogFunction LogLink, LogFunction LogCompile)
@@ -72,7 +75,7 @@ int SmartString<T>::free() {
 }
 
 template<typename T>
-int SmartString<T>::reset(int resetsize) {
+int SmartString<T>::realloc(int resetsize) {
 	//if (m_SmartString != NULL) {
 	//	if (m_SmartString->data != NULL) {
 	//		//delete[](m_SmartString->data);
@@ -91,7 +94,7 @@ int SmartString<T>::reset(int resetsize) {
 	T *data;
 	capacity = m_SmartString->capacity;
 	while (resetsize > capacity) capacity *= 2;
-	data = (T*)realloc(m_SmartString->data, capacity);
+	data = (T*)::realloc(m_SmartString->data, capacity);
 	if (!data)
 		return -1;
 	m_SmartString->capacity = capacity;
@@ -100,8 +103,8 @@ int SmartString<T>::reset(int resetsize) {
 }
 
 template<typename T>
-int SmartString<T>::reinit(int newsize) {
-	if (m_SmartString->data == NULL)
+int SmartString<T>::reset(int newsize) {
+	/*if (m_SmartString->data == NULL)
 		return -1;
 	int capacity;
 	T *data = (T*)malloc(sizeof(T) * newsize);
@@ -114,7 +117,19 @@ int SmartString<T>::reinit(int newsize) {
 	memcpy(data, m_SmartString->data, m_SmartString->size);
 	::free(m_SmartString->data);
 	m_SmartString->data = data;
-	m_SmartString->capacity = capacity;
+	m_SmartString->capacity = capacity;*/
+	if (m_SmartString != NULL) {
+		if (m_SmartString->data != NULL) {
+			delete[](m_SmartString->data);
+			m_SmartString->data = NULL;
+			m_SmartString->capacity = 0;
+			m_SmartString->size = 0;
+		}
+
+		m_SmartString->data = (T*)malloc(sizeof(T)* newsize);
+		m_SmartString->size = 0;
+		m_SmartString->capacity = newsize;
+	}
 	return 0;
 }
 
@@ -123,7 +138,7 @@ int SmartString<T>::append(T ch) {
 	int count;
 	count = m_SmartString->size + 1;
 	if (count > m_SmartString->capacity)
-		reinit(count);
+		realloc(count);
 	(m_SmartString->data)[count - 1] = ch;
 	m_SmartString->size = count;
 	return 0;
@@ -277,10 +292,10 @@ TkTable::TkTable():m_Word(NULL) {
 	m_tkTable.init(256);
 }
 TkTable::~TkTable() {
-	/*if (m_Word != NULL) {
+	if (m_Word != NULL) {
 		::free(m_Word);
 		m_Word = NULL;
-	}*/
+	}
 }
 
 //init
@@ -835,6 +850,7 @@ void LexicalAnalysisImp::token_colored(int lex_state) {
 		printf("&c", ch);
 		break;
 	}
+
 }
 char* LexicalAnalysisImp::get_tkstr(int token) {
 	if (token > m_TkHashTable->array_size())
@@ -895,7 +911,9 @@ void LexicalAnalysisImp::run() {
 	SetConsoleTextAttribute(hOut,
 		BACKGROUND_GREEN |
 		BACKGROUND_INTENSITY);
-	printf("\n\n\n代码行数：%d行", line_num);
+	printf("\n\n\n代码行数：%d\n\n\n", line_num);
+	SetConsoleTextAttribute(hOut, FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN);
+
 	LogMessage("\n\n\n代码行数：%d行", line_num);
 }
 

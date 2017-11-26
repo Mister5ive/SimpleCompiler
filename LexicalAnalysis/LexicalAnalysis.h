@@ -27,7 +27,7 @@ public:
 	int init(int initsize);
 	int free();
 	int reset(int resetsize = 8);
-	int reinit(int newsize);
+	int realloc(int newsize);
 	int append(T ch);
 	void print();
 	int size();
