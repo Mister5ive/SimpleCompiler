@@ -11,6 +11,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TEST", "TEST\TEST.vcxproj",
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LexicalAnalysis", "LexicalAnalysis\LexicalAnalysis.vcxproj", "{869F7768-A39C-41ED-B4AE-5AF0F3FDDF6C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SyntaxAnalysis", "SyntaxAnalysis\SyntaxAnalysis.vcxproj", "{D353319C-3B27-4CD2-BCDB-FA53F39601DC}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SynataxAnalysisTmp", "SynataxAnalysisTmp\SynataxAnalysisTmp.vcxproj", "{617A2DB6-7518-4100-88EF-02ED9429F9E5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -51,6 +55,22 @@ Global
 		{869F7768-A39C-41ED-B4AE-5AF0F3FDDF6C}.Release|x64.Build.0 = Release|x64
 		{869F7768-A39C-41ED-B4AE-5AF0F3FDDF6C}.Release|x86.ActiveCfg = Release|Win32
 		{869F7768-A39C-41ED-B4AE-5AF0F3FDDF6C}.Release|x86.Build.0 = Release|Win32
+		{D353319C-3B27-4CD2-BCDB-FA53F39601DC}.Debug|x64.ActiveCfg = Debug|x64
+		{D353319C-3B27-4CD2-BCDB-FA53F39601DC}.Debug|x64.Build.0 = Debug|x64
+		{D353319C-3B27-4CD2-BCDB-FA53F39601DC}.Debug|x86.ActiveCfg = Debug|Win32
+		{D353319C-3B27-4CD2-BCDB-FA53F39601DC}.Debug|x86.Build.0 = Debug|Win32
+		{D353319C-3B27-4CD2-BCDB-FA53F39601DC}.Release|x64.ActiveCfg = Release|x64
+		{D353319C-3B27-4CD2-BCDB-FA53F39601DC}.Release|x64.Build.0 = Release|x64
+		{D353319C-3B27-4CD2-BCDB-FA53F39601DC}.Release|x86.ActiveCfg = Release|Win32
+		{D353319C-3B27-4CD2-BCDB-FA53F39601DC}.Release|x86.Build.0 = Release|Win32
+		{617A2DB6-7518-4100-88EF-02ED9429F9E5}.Debug|x64.ActiveCfg = Debug|x64
+		{617A2DB6-7518-4100-88EF-02ED9429F9E5}.Debug|x64.Build.0 = Debug|x64
+		{617A2DB6-7518-4100-88EF-02ED9429F9E5}.Debug|x86.ActiveCfg = Debug|Win32
+		{617A2DB6-7518-4100-88EF-02ED9429F9E5}.Debug|x86.Build.0 = Debug|Win32
+		{617A2DB6-7518-4100-88EF-02ED9429F9E5}.Release|x64.ActiveCfg = Release|x64
+		{617A2DB6-7518-4100-88EF-02ED9429F9E5}.Release|x64.Build.0 = Release|x64
+		{617A2DB6-7518-4100-88EF-02ED9429F9E5}.Release|x86.ActiveCfg = Release|Win32
+		{617A2DB6-7518-4100-88EF-02ED9429F9E5}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
