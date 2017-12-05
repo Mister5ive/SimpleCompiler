@@ -2,6 +2,7 @@
 #include"stdio.h"
 
 int token;
+int tkvalue;
 int syntax_state;
 int syntax_level;
 void external_declaration(int sType);
@@ -229,3 +230,34 @@ void direct_declarator_postfix() {
 	}
 }
 
+/*
+解析形参类型表
+<parameter_type_list>::=<type_specifier>{<declarator>}
+						{<TK_COMMA><type_specifier>{<declarator>}}<TK_COMMA><TK_ELLIPSIS>
+*/
+
+
+void parameter_type_list(int func_call) {
+	get_token();
+	while (token != TK_CLOSEPA) {
+		if (!type_specifier())
+			expect("无效类型标识符");
+		declarator();
+		if (token == TK_CLOSEPA)
+			break;
+		skip(TK_COMMA);
+		if (token == TK_ELLIPSIS) {
+			func_call = KW_CDECL;
+			get_token();
+			break;
+		}
+	}
+	syntax_state = SC_STATE_DELAY;
+	skip(TK_CLOSEPA);
+	if (token == TK_BEGIN)				//函数定义
+		syntax_state = SC_STATE_LF_HT;
+	else
+		syntax_state = SC_STATE_NULL;	//函数声明
+	syntax_indent();
+
+}
