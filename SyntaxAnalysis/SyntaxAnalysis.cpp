@@ -504,7 +504,7 @@ public:
 };
 int main(int argc,char** argv)
 {
-	if (argc != 2)
+	/*if (argc != 2)
 		return -1;
 	char* file = argv[1];
 	LexicalAnalysis test;
@@ -512,9 +512,9 @@ int main(int argc,char** argv)
 	test.open(file);
 	test.run();
 	test.close();
-	system("pause");
+	system("pause");*/
 	//SmartString Test
-	/*SmartString<char> smartstring;
+	SmartString<char> smartstring;
 	smartstring.init(10);
 	smartstring.append('w');
 	smartstring.append('d');
@@ -540,7 +540,7 @@ int main(int argc,char** argv)
 	smartstring.free();
 	printf("\n%d\n", smartstring.size());
 	printf("%d\n", smartstring.capacity());
-	system("pause");*/
+	system("pause");
 
 	//SmartArray Test
 	//SmartArray<char> smartarray;

@@ -615,7 +615,7 @@ void LexicalAnalysisImp::process() {
 	{
 		_TkWord *tp;
 		parse_identifier();
-		tp = m_TkHashTable->insert(m_TkString->str());
+		tp = m_TkHashTable->insert(m_TkString->str());//!!!!!!
 		token = tp->tkcode;
 		break;
 	}

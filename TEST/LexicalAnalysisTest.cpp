@@ -24,7 +24,7 @@ typedef void (*PLEXICALANALYSISDESTROY)(LexicalAnalysis*);
 typedef void (*PSETLOGFUNCTION)(LogFunction Logmsg, LogFunction Logerr, LogFunction LogWarnig, LogFunction LogLink, LogFunction LogCompile);
 
 #define MSG_LEN 256
-char g_logpath[256] = "F:\\";									///<日志文件路径
+char g_logpath[256] = "D:\\";									///<日志文件路径
 
 LexicalAnalysis *g_Lex;
 
