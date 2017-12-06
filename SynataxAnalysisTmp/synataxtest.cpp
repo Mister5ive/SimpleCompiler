@@ -261,3 +261,56 @@ void parameter_type_list(int func_call) {
 	syntax_indent();
 
 }
+
+/*
+*º¯ÊýÌå
+<funcbody>::=<compound_statement>
+*/
+
+void funcbody() {
+	compound_statement();
+}
+
+/*
+*³õÖµ·û
+<initializer>::=<assignment_expression>
+*/
+
+void initializer() {
+	assignment_expression();
+}
+
+/*
+*Óï¾ä
+<statement>::=<compound_statement> |<if_statement> |<return_statement>|<break_statement>|<continue_statement>|<for_statement>|<expression_statement>
+*/
+
+void statement(int &bsym, int &csym) {
+	switch (token)
+	{
+	case TK_BEGIN:
+		compound_statement(bsym.csym);
+		break;
+	case KW_IF:
+		if_statement(bsym.csym);
+		break;
+	case KW_RETURN:
+		return_statement();
+		break;
+	case KW_BREAK:
+		break_statement(bsym);
+		break;
+	case KW_CONTINUE:
+		continue_statement(csym);
+		break;
+	case KW_FOR:
+		for_statement(bsym.csym);
+		break;
+	default:
+		expression_statement();
+		break;
+	}
+}
+
+
+
