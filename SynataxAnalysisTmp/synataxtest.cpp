@@ -8,6 +8,7 @@ int syntax_level;
 void external_declaration(int sType);
 int type_specifier();
 void struct_specifier();
+void get_token();
 /*
 <translate>::={external_declaration}<TK_EOF>
 */
@@ -312,5 +313,124 @@ void statement(int &bsym, int &csym) {
 	}
 }
 
+/*
+复合语句
+<compound_statement>::=<TK_BEGIN>{<declaration>}{statement}<TK_END>
+*/
 
+void compound_statement() {
+	syntax_state = SC_STATE_LF_HT;
+	syntax_level++;
 
+	get_token();
+	while (is_type_specifier(token)) {
+		external_declaration(SC_LOCAL);
+	}
+	while (token != TK_END) {
+		statement();
+	}
+	syntax_state = SC_STATE_LF_HT;
+	get_token();
+}
+
+/*
+判断是否为类型区分符
+*/
+
+int is_type_specifier(int v) {
+	switch (v) {
+	case KW_CHAR:
+	case KW_INT:
+	case KW_SHORT:
+	case KW_VOID:
+	case KW_STRUCT:
+		return 1;
+	default:
+		return;
+	}
+	return 0;
+}
+
+/*
+表达式语句
+<expression_statement>::=<TK_SEMICOLON>|<expression><TK_SEMICOLON>
+*/
+
+void expression_statement() {
+	
+	while (token != TK_SEMICOLON){
+		expression();
+	}
+	syntax_state = SC_STATE_LF_HT;
+	skip(TK_SEMICOLON);
+}
+
+/*
+选择语句
+<if_statement>::=<KW_IF><TK_OPENPA><expression><TK_CLOSEPA>
+				<statement>[<KW_ELSE><statement>]
+*/
+
+void if_statement(){
+	syntax_state = SC_STATE_SP;
+	get_token();
+	skip(TK_OPENPA);
+	expression();
+	syntax_state = SC_STATE_LF_HT;
+	skip(TK_CLOSEPA);
+	statement();
+	if (token == KW_ELSE){
+		syntax_state = SC_STATE_LF_HT;
+		get_token();
+		statement();
+	}
+}
+
+/*
+for：
+<for_statement>::=<KW_FOR><TK_OPENPA><expression_statement><expression_statement><expression><TK_CLOSEPA><statement>
+*/
+
+void for_statement(){
+	get_token();
+	skip(TK_OPENPA);
+	if (token != TK_SEMICOLON)
+		expression();
+	skip(TK_SEMICOLON);
+	if (token != TK_SEMICOLON)
+		expression();
+	skip(TK_SEMICOLON);
+	if (token != TK_SEMICOLON)
+		expression();
+	syntax_state = SC_STATE_LF_HT;
+	skip(TK_CLOSEPA);
+	statement();
+}
+
+/*
+continue
+<continue_statement>::=<KW_CONTINUE><TK_SEMICOLON>
+注：当continue不在循环内时，编译也可以通过，语义分析阶段加以处理这种情况
+*/
+
+void continue_statement(){
+	get_token();
+	syntax_state = SC_STATE_LF_HT;
+	skip(TK_SEMICOLON);
+}
+
+/*
+break
+<break_statement>::=<KW_BREAK><TK_SEMICOLON>
+*/
+void break_statement(){
+	get_token();
+	syntax_state = SC_STATE_LF_HT;
+	skip(TK_SEMICOLON);
+
+}
+
+/*
+return
+<return_statement>::=
+*/
