@@ -432,5 +432,41 @@ void break_statement(){
 
 /*
 return
-<return_statement>::=
+<return_statement>::=<KW_RETURN><TK_SEMICOLON>|
+				<KW_RETURN><expression><TK_SEMICOLON>
+*/
+
+void return_statement() {
+	syntax_state = SC_STATE_DELAY;
+	get_token();
+	if(token == TK_SEMICOLON)
+		syntax_state = SC_STATE_LF_HT;
+	else
+		syntax_state = SC_STATE_SP;
+	syntax_indent();////////?????????
+
+	if (token != TK_SEMICOLON)
+		expression();
+	syntax_state = SC_STATE_LF_HT;
+	skip(TK_SEMICOLON);
+
+}
+
+/*
+表达式
+<expression>::=<assignment_expression>{<TK_COMMA><assignment_expression>}
+*/
+
+void expression() {
+	while (1) {
+		assignment_expression();
+		if (token != TK_COMMA)
+			break;
+		get_token();
+	}
+}
+
+/*
+赋值表达式
+<assignment_expression>::=
 */
