@@ -468,5 +468,32 @@ void expression() {
 
 /*
 赋值表达式
-<assignment_expression>::=
+<assignment_expression>::=<equality_expression>
+					{<TK_ASSIGN><assignment_expression>};
+*/
+void assignment_expression() {
+	equality_expression();
+	if (token == TK_ASSIGN) {
+		get_token();
+		assignment_expression();
+	}
+}
+
+/*
+相等类表达式
+<equality_expression>::=<relational_expression>
+		{<TK_EQ><relational_expression>
+		 | <TK_NEQ><relational_expression>}
+*/
+
+void equality_expression() {
+	relational_expression();
+	while (token == TK_EQ || token == TK_NEQ) {
+		get_token();
+		relational_expression();
+	}
+}
+
+/*
+	<relational_expression>::=<>
 */
