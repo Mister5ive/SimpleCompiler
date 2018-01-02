@@ -15,6 +15,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SyntaxAnalysis", "SyntaxAna
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SynataxAnalysisTmp", "SynataxAnalysisTmp\SynataxAnalysisTmp.vcxproj", "{617A2DB6-7518-4100-88EF-02ED9429F9E5}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LSCCompiler", "LSCCompiler\LSCCompiler.vcxproj", "{9488FF4E-224C-4BC3-85DE-81F31426E099}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -71,6 +73,14 @@ Global
 		{617A2DB6-7518-4100-88EF-02ED9429F9E5}.Release|x64.Build.0 = Release|x64
 		{617A2DB6-7518-4100-88EF-02ED9429F9E5}.Release|x86.ActiveCfg = Release|Win32
 		{617A2DB6-7518-4100-88EF-02ED9429F9E5}.Release|x86.Build.0 = Release|Win32
+		{9488FF4E-224C-4BC3-85DE-81F31426E099}.Debug|x64.ActiveCfg = Debug|x64
+		{9488FF4E-224C-4BC3-85DE-81F31426E099}.Debug|x64.Build.0 = Debug|x64
+		{9488FF4E-224C-4BC3-85DE-81F31426E099}.Debug|x86.ActiveCfg = Debug|Win32
+		{9488FF4E-224C-4BC3-85DE-81F31426E099}.Debug|x86.Build.0 = Debug|Win32
+		{9488FF4E-224C-4BC3-85DE-81F31426E099}.Release|x64.ActiveCfg = Release|x64
+		{9488FF4E-224C-4BC3-85DE-81F31426E099}.Release|x64.Build.0 = Release|x64
+		{9488FF4E-224C-4BC3-85DE-81F31426E099}.Release|x86.ActiveCfg = Release|Win32
+		{9488FF4E-224C-4BC3-85DE-81F31426E099}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
