@@ -1,5 +1,6 @@
 #include"synataxtest.h"
 #include"stdio.h"
+#include <windows.h>
 
 int token;
 int tkvalue;
@@ -8,11 +9,88 @@ int syntax_level;
 void external_declaration(int sType);
 int type_specifier();
 void struct_specifier();
-void get_token();
+
+void token_colored(int lex_state) {
+	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	char *pOut = NULL;
+	switch (lex_state) {
+	case LEX_NORMAL:
+		if (token >= TK_IDENT)//标识符
+			SetConsoleTextAttribute(hOut, FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN);
+		else if (token >= KW_CHAR)//关键字
+			SetConsoleTextAttribute(hOut, FOREGROUND_BLUE | FOREGROUND_GREEN);
+		else if (token >= TK_CINT)//常量
+			SetConsoleTextAttribute(hOut, FOREGROUND_RED | FOREGROUND_GREEN);
+		else //运算符 分隔符
+			SetConsoleTextAttribute(hOut, FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN);
+		pOut = get_tkstr(token);
+		if (token != TK_EOF)
+		{
+			if (token == TK_CSTR)
+				printf("\"", pOut);
+			if (token == TK_CCHAR)
+				printf("\"", pOut);
+			printf("%s", pOut);
+			if (token == TK_CSTR)
+				printf("\"", pOut);
+			if (token == TK_CCHAR)
+				printf("\"", pOut);
+		}
+		break;
+	case LEX_LEP:
+		printf("&c", ch);
+		break;
+	}
+
+}
+
+void get_token() {
+
+	syntax_indent();
+
+}
+
+void skip(int ch) {
+	if (token != ch)
+		printf("缺少%d",ch);
+	get_token();
+}
+//语法缩进
+void syntax_indent() {
+	switch (syntax_state) {
+	case SC_STATE_NULL:
+		token_colored(LEX_NORMAL);
+		break;
+	case SC_STATE_SP:
+		printf(" ");
+		token_colored(LEX_NORMAL);
+		break;
+	case SC_STATE_LF_HT:
+		{
+		if (token == TK_END)//遇到},缩进减少一级
+			syntax_level--;
+		printf("\n");
+		print_tab(syntax_level);
+		}
+		token_colored(LEX_NORMAL);
+		break;
+	case SC_STATE_DELAY:
+		break;
+	}
+	syntax_state = SC_STATE_NULL;
+}
+
+//缩进n个Tab键
+void print_tab(int num) {
+	for (int i = 0; i < num;++num) {
+		printf("\t");
+	}
+}
+
 /*
 <translate>::={external_declaration}<TK_EOF>
 */
-void translate() {
+void translation_unit() {
 	while (token != TK_EOF) {
 		external_declaration(SC_GLOBAL);
 	}
@@ -29,7 +107,7 @@ void translate() {
 */
 void external_declaration(int sType){
 	if (!type_specifier()) {
-		expect("<类型区分符>");
+		printf("<类型区分符>");
 	}
 	if (token == TK_SEMICOLON) {
 		get_token();
@@ -52,7 +130,7 @@ void external_declaration(int sType){
 				get_token();
 			}
 			else {
-				syntax_state = SNTX_LF_HT;
+				syntax_state = SC_STATE_LF_HT;
 				skip(TK_SEMICOLON);
 				break;
 			}
@@ -110,7 +188,7 @@ void struct_specifier() {
 	syntax_indent();
 
 	if (v < TK_IDENT)						//关键字不能作为结构体名称
-		expect("struct");
+		printf("struct");
 	if (token == TK_BEGIN)
 		struct_declaration_list();
 }
@@ -120,14 +198,15 @@ void struct_specifier() {
 <struct_declaration_list>::= <struct_declaration>{<struct_declaration>}
 */
 void struct_declaration_list() {
-	int maxalign, offset;
+	//int maxalign, offset;
 
 	syntax_state = SC_STATE_LF_HT;	//第一个结构体成员另起一行
 	syntax_level++;					//结构体成员变量声明，缩进增加一级
 
 	get_token();
 	while (token !=TK_END) {
-		struct_declaration(&maxalign,&offset);
+		//struct_declaration(&maxalign, &offset);
+		struct_declaration();
 	}
 	skip(TK_END);
 	syntax_state = SC_STATE_LF_HT;
@@ -175,7 +254,7 @@ void struct_member_aligment() {
 		if (token == TK_CINT)
 			get_token();
 		else
-			expect("整型常量");
+			printf("整型常量");
 		skip(TK_CLOSEPA);
 	}
 }
@@ -204,7 +283,7 @@ void direct_declarator() {
 	if (token >= TK_IDENT)
 		get_token();
 	else
-		expect("标识符");
+		printf("标识符");
 	direct_declarator_postfix();
 }
 
@@ -219,7 +298,7 @@ void direct_declarator() {
 void direct_declarator_postfix() {
 	int n;
 	if (token == TK_OPENPA)
-		parameter_type_list();
+		parameter_type_list(n);// may wrong
 	else if (token == TK_OPENBR) {
 		get_token();
 		if (token == TK_CINT) {
@@ -242,7 +321,7 @@ void parameter_type_list(int func_call) {
 	get_token();
 	while (token != TK_CLOSEPA) {
 		if (!type_specifier())
-			expect("无效类型标识符");
+			printf("无效类型标识符");
 		declarator();
 		if (token == TK_CLOSEPA)
 			break;
@@ -286,26 +365,27 @@ void initializer() {
 <statement>::=<compound_statement> |<if_statement> |<return_statement>|<break_statement>|<continue_statement>|<for_statement>|<expression_statement>
 */
 
-void statement(int &bsym, int &csym) {
+void statement()
+{
 	switch (token)
 	{
 	case TK_BEGIN:
-		compound_statement(bsym.csym);
+		compound_statement();
 		break;
 	case KW_IF:
-		if_statement(bsym.csym);
+		if_statement();
 		break;
 	case KW_RETURN:
 		return_statement();
 		break;
 	case KW_BREAK:
-		break_statement(bsym);
+		break_statement();
 		break;
 	case KW_CONTINUE:
-		continue_statement(csym);
+		continue_statement();
 		break;
 	case KW_FOR:
-		for_statement(bsym.csym);
+		for_statement();
 		break;
 	default:
 		expression_statement();
@@ -495,5 +575,180 @@ void equality_expression() {
 }
 
 /*
-	<relational_expression>::=<>
+关系表达式
+	<relational_expression>::=<additive_expression>{
+		<TK_LT><additive_expression>
+		|<TK_GT><additive_expression>
+		|<TK_LEQ><additive_expression>
+		|<TK_GEQ><additive_expression>
+	}
 */
+
+void relational_expression() {
+	additive_expression();
+	while (token == TK_LT || token == TK_LT || token == TK_LT || token == TK_LT) {
+		get_token();
+		additive_expression();
+	}
+}
+
+/*
+加减类
+<additive_expression>::=<multiplicative_expression>{
+	<TK_PLUS><multiplicative_expression>
+	<TK_MINUS><multiplicative_expression>
+}
+*/
+void additive_expression() {
+	multiplicative_expression();
+	while (token == TK_PLUS || token == TK_MINUS) {
+		get_token();
+		multiplicative_expression();
+	}
+}
+
+/*
+乘除类
+<multiplicative_expression>::=<unary_expression>{
+	<TK_STAR><unary_expression>
+	|<TK_DIVIDE><unary_expression>
+	|<TK_MOD><unary_expression>
+}
+*/
+
+void multiplicative_expression() {
+	unary_expression();
+	while (token == TK_STAR || token == TK_DIVIDE || token == TK_MOD){
+		get_token();
+		unary_expression();
+	}
+}
+
+/*
+一元表达式
+<unary_expression>::=<postfix_expression>
+		|<TK_AND><unary_expression>
+		|<TK_STAR><unary_expression>
+		|<TK_PLUS><unary_expression>
+		|<TK_MINUS><unary_expression>
+		|<sizeof_expression>
+*/
+
+void unary_expression() {
+	switch (token) {
+	case TK_AND:
+		get_token();
+		unary_expression();
+		break;
+	case TK_STAR:
+		get_token();
+		unary_expression();
+		break;
+	case TK_PLUS:
+		get_token();
+		unary_expression();
+		break;
+	case TK_MINUS:
+		get_token();
+		unary_expression();
+		break;
+	case KW_SIZEOF:
+		sizeof_expression();
+		break;
+	default:
+		postfix_expression();
+		break;
+	}
+}
+
+/*
+sizeof()
+<sizeof_expression>::=<KW_SIZEOF><TK_OPENPA><type_specifier><TK_CLOSEPA>
+*/
+void sizeof_expression() {
+	get_token();
+	skip(TK_OPENPA);
+	type_specifier();//类型区分符
+	skip(TK_CLOSEPA);
+}
+
+/*
+后缀表达式
+<postfix_expression>::=<primary_expression>
+	{<TK_OPENPA><TK_CLOSEPA>
+	|<TK_OPENBR><expression><TK_CLOSEBR>
+	|<TK_OPENPA><argument_expression_list><TK_CLOSEPA>
+	|<TK_DOT><IDENTIFIER>
+	|<TK_POINTSTO><IDENTIFIER>
+	}
+*/
+
+void postfix_expression() {
+	primary_expression();
+	while (1) {
+		if (token == TK_DOT || token == TK_POINTSTO) {
+			get_token();
+			token |= SC_MEMBER;
+			get_token();
+		}
+		else if (token == TK_OPENBR) {
+			get_token();
+			expression();
+			skip(TK_CLOSEBR);
+		}
+		else if (token == TK_OPENPA) {
+			argument_expression_list();
+		}
+		else
+			break;
+	}
+}
+
+/*
+初值表达式
+<primary_expression>::=<IDENTIFIER> | <TK_CINT>
+| <TK_CSTR> | <TK_CCHAR> | <TK_OPENPA><expression><TK_CLOSEPA>
+*/
+
+void primary_expression() {
+	int t;
+	switch (token){
+	case TK_CINT:
+	case TK_CCHAR:
+		get_token();
+		break;
+	case TK_CSTR:
+		get_token();
+		break;
+	case TK_OPENPA:
+		get_token();
+		expression();
+		skip(TK_CLOSEPA);
+		break;
+	default:
+		t = token;
+		get_token();
+		if (t < TK_IDENT)
+			printf("标识符或常量");
+		break;
+	}
+}
+
+/*
+实参表达式表
+<argument_expression_list>::=<assignment_expression>
+	{<TK_COMMA><assignment_expression>}
+*/
+
+void argument_expression_list() {
+	get_token();
+	if (token != TK_CLOSEPA) {
+		for (;;) {
+			assignment_expression();
+			if (token == TK_CLOSEPA)
+				break;
+			skip(TK_COMMA);
+		}
+	}
+	skip(TK_CLOSEPA);
+}
