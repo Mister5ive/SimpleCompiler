@@ -1,6 +1,7 @@
 #ifndef  COMPILERDEF_H_
 #define  COMPILERDEF_H_
 
+
 #define TABLEMAX 1024
 #define MSG_LEN 256
 
@@ -67,6 +68,7 @@ typedef enum {
 	KW_CHAR,		// char¹Ø¼ü×Ö
 	KW_SHORT,		// short¹Ø¼ü×Ö
 	KW_INT,			// int¹Ø¼ü×Ö
+	KW_BOOL,		// bool¹Ø¼ü×Ö
 	KW_VOID,		// void¹Ø¼ü×Ö  
 	KW_STRUCT,		// struct¹Ø¼ü×Ö   
 	KW_IF,			// if¹Ø¼ü×Ö
