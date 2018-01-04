@@ -29,6 +29,7 @@ public:
 	virtual int open(char* file_name) = 0;
 	virtual int close() = 0;
 	virtual void LexicalAnalysis() = 0;
+	virtual void SyntaxAnalysis() = 0;
 };
 
 #ifdef __cplusplus
@@ -36,8 +37,8 @@ extern "C" {
 #endif // __cplusplus
 
 
-	LSCCOMPILER_API LSCCompilerBase* LexicalAnalysisCreate(void);
-	LSCCOMPILER_API void LexicalAnalysisDestroy(LSCCompilerBase*);
+	LSCCOMPILER_API LSCCompilerBase* LSCCompilerCreate(void);
+	LSCCOMPILER_API void LSCCompilerDestroy(LSCCompilerBase*);
 	LSCCOMPILER_API void SetLogFunction(LogFunction Logmsg, LogFunction Logerr, LogFunction LogWarnig, LogFunction LogLink, LogFunction LogCompile);
 
 #ifdef __cplusplus

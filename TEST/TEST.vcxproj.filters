@@ -21,6 +21,9 @@
     <ClCompile Include="LexicalAnalysisTest.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="SyntaxAnalysisTest.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="Readme.txt" />

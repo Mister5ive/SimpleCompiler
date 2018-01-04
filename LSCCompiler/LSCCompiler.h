@@ -117,6 +117,8 @@ public:
 	int open(char* file_name);
 	int close();
 	void LexicalAnalysis();
+	void SyntaxAnalysis();
+
 	void translation_unit();//
 	void syntax_indent();////Óï·¨Ëõ½ø
 public:

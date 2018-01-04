@@ -8,12 +8,12 @@ static LogFunction	g_LogWarning = NULL;
 static LogFunction	g_LogLink = NULL;
 static LogFunction	g_LogCompile = NULL;
 
-LSCCompilerBase* LSCCompilerImpCreate(void) {
+LSCCompilerBase*  LSCCompilerCreate(void) {
 	LSCCompilerImp* pInstance = new LSCCompilerImp();
 	if (pInstance)
 		return pInstance;
 }
-void LSCCompilerImpDestroy(LSCCompilerBase* pInstance) {
+void  LSCCompilerDestroy(LSCCompilerBase* pInstance) {
 	if (pInstance) {
 		delete pInstance;
 		pInstance = NULL;
@@ -619,6 +619,9 @@ void LSCCompilerImp::parse_string(char str) {
 	m_SourceString->append('\0');
 	getch();
 }
+/***********************************************************
+*  功能:	取单词
+**********************************************************/
 void LSCCompilerImp::get_token() {
 	preprocess();
 	switch (ch) {
@@ -955,6 +958,17 @@ void LSCCompilerImp::syntax_indent() {
 	syntax_state = SC_STATE_NULL;
 }
 /**************************************************
+//词法分析
+**************************************************/
+
+void LSCCompilerImp::SyntaxAnalysis() {
+
+	getch();
+	get_token();
+	translation_unit();
+}
+/**************************************************
+解析翻译模块
 <translate>::={external_declaration}<TK_EOF>
 **************************************************/
 void LSCCompilerImp::translation_unit() {
