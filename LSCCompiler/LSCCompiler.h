@@ -119,7 +119,7 @@ public:
 	void LexicalAnalysis();
 	void SyntaxAnalysis();
 
-	void translation_unit();//
+	void syntaxAnalysis_unit();//
 	void syntax_indent();////语法缩进
 public:
 	SmartString<char> *m_TkString;//单词字符串
@@ -130,8 +130,8 @@ public:
 	int token;//单词编码
 	int line_num;//行号
 	int tkvalue;//单词值
-	int syntax_state;
-	int syntax_level;
+	int syntax_state;//语法状态
+	int syntax_level;//缩进Tab计数
 //词法分析函数
 private:
 	void external_declaration(int sType);//解析外部声明

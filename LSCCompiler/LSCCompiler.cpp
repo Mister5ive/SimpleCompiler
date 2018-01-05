@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "LSCCompiler.h"
 
+#define SYNTAXANALYSIS 1
 
 static LogFunction	g_LogMsg = NULL;
 static LogFunction	g_LogError = NULL;
@@ -827,6 +828,10 @@ void LSCCompilerImp::get_token() {
 		getch();
 		break;
 	}
+#ifdef SYNTAXANALYSIS
+	//语法缩进
+	syntax_indent();
+#endif
 }
 void LSCCompilerImp::token_colored(int lex_state) {
 	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -874,12 +879,18 @@ void LSCCompilerImp::skip(int c) {
 		printf("lack of %s\n", get_tkstr(c));
 	get_token();
 }
+/***********************************************************
+* 缩进n个tab键
+* num:	缩进个数
+**********************************************************/
 void LSCCompilerImp::print_tab(int num) {
-	for (int i = 0; i < num; ++num) {
+	for (int i = 0; i < num; ++i) {
 		printf("\t");
 	}
 }
-
+/***********************************************************
+* LSCCompiler初始化
+**********************************************************/
 int LSCCompilerImp::init() {
 	int ret = 0;
 	if (m_TkString)
@@ -915,6 +926,11 @@ int LSCCompilerImp::close() {
 		return SCP_CLOSE_FAILED;
 	return fclose(m_file) == 0 ? SCP_ERROR_NONE : SCP_CLOSE_FAILED;
 }
+
+/***********************************************************
+//词法分析函数
+//注：单独使用需注释掉 宏SYNTAXANALYSIS
+**********************************************************/
 void LSCCompilerImp::LexicalAnalysis() {
 	getch();
 	do {
@@ -933,7 +949,10 @@ void LSCCompilerImp::LexicalAnalysis() {
 
 //语法分析
 
+/***********************************************************
 //语法缩进
+//注：与LexicalAnalysis()相比，多了语法状态判断
+**********************************************************/
 void LSCCompilerImp::syntax_indent() {
 	switch (syntax_state) {
 	case SC_STATE_NULL:
@@ -944,14 +963,12 @@ void LSCCompilerImp::syntax_indent() {
 		token_colored(LEX_NORMAL);
 		break;
 	case SC_STATE_LF_HT:
-	{
 		if (token == TK_END)//遇到},缩进减少一级
 			syntax_level--;
 		printf("\n");
 		print_tab(syntax_level);
-	}
-	token_colored(LEX_NORMAL);
-	break;
+		token_colored(LEX_NORMAL);
+		break;
 	case SC_STATE_DELAY:
 		break;
 	}
@@ -965,19 +982,21 @@ void LSCCompilerImp::SyntaxAnalysis() {
 
 	getch();
 	get_token();
-	translation_unit();
+	syntaxAnalysis_unit();
 }
 /**************************************************
-解析翻译模块
-<translate>::={external_declaration}<TK_EOF>
+//解析翻译模块
+<syntaxAnalysis_unit>::={external_declaration}<TK_EOF>
 **************************************************/
-void LSCCompilerImp::translation_unit() {
+void LSCCompilerImp::syntaxAnalysis_unit() {
 	while (token != TK_EOF) {
 		external_declaration(SC_GLOBAL);
 	}
 }
 
 /**************************************************
+//解析外部声明
+//sType:存储类型，局部的还是全局的
 <external_declaration>::=
 <type_specifier>(<TK_SEMICOLON>
 |<declaration><funcbody>
@@ -1020,7 +1039,7 @@ void LSCCompilerImp::external_declaration(int sType) {
 }
 
 /**************************************************
-*类型区分符
+//类型区分符
 <type_specifier>::=<KW_INT> |<KW_CHAR>|<KW_SHORT>|<KW_VOID>|<struct_specifier>
 **************************************************/
 
@@ -1047,7 +1066,7 @@ int LSCCompilerImp::type_specifier() {
 }
 
 /**************************************************
-*结构区分符
+//结构体区分符
 <struct_specifier>::=
 <KW_STRUCT><IDENTIFIER><TK_BEGIN><struct_declaration_list><TK_END>
 |<KW_STRUCT><IDENTIFIER>
@@ -1076,7 +1095,7 @@ void LSCCompilerImp::struct_specifier() {
 
 
 /**************************************************
-*结构区分符
+//结构体声明符表
 <struct_declaration_list>::= <struct_declaration>{<struct_declaration>}
 **************************************************/
 void LSCCompilerImp::struct_declaration_list() {
@@ -1095,6 +1114,7 @@ void LSCCompilerImp::struct_declaration_list() {
 }
 
 /**************************************************
+//结构体声明
 <struct_declaration>::=<type_specifier><declarator>{<TK_COMMA><declarator>}<TK_SEMICOLON>
 **************************************************/
 
@@ -1111,7 +1131,7 @@ void LSCCompilerImp::struct_declaration() {
 }
 
 /**************************************************
-*函数调用约定
+//函数调用约定
 <function_calling_convebtion>::=<KW_CDECL>|<KW_STDCALL>
 **************************************************/
 
