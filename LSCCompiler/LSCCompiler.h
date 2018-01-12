@@ -3,6 +3,7 @@
 #include "stdafx.h"
 #include "LSCCompilerAPI.h"
 #include "../include/CompilerDef.h"
+#include<stack>
 
 /*
 *Log
@@ -119,19 +120,24 @@ public:
 	void LexicalAnalysis();
 	void SyntaxAnalysis();
 
-	void syntaxAnalysis_unit();//
-	void syntax_indent();////语法缩进
+	void syntaxAnalysis_unit();
+	void syntax_indent();							//语法缩进
 public:
-	SmartString<char> *m_TkString;//单词字符串
-	SmartString<char> *m_SourceString;//单词源码字符串
-	TkTable *m_TkHashTable;//单词哈希表
-	FILE *m_file;//源码文件
-	char ch;//当前从文件中get的到字符
-	int token;//单词编码
-	int line_num;//行号
-	int tkvalue;//单词值
-	int syntax_state;//语法状态
-	int syntax_level;//缩进Tab计数
+	SmartString<char> *m_TkString;					//单词字符串
+	SmartString<char> *m_SourceString;				//单词源码字符串
+	TkTable *m_TkHashTable;							//单词哈希表
+	SmartArray<_TkWord*>   *m_TkArray;// 单词表中放置标识符，包括变量名,函数名,结构定义名
+	FILE *m_file;									//源码文件
+	char ch;										//当前从文件中get的到字符
+	int token;										//单词编码
+	int line_num;									//行号
+	int tkvalue;									//单词值
+	int syntax_state;								//语法状态
+	int syntax_level;								//缩进Tab计数
+	std::stack<Symbol> m_global_sym_stack;			//全局符号栈
+	std::stack<Symbol> m_local_sym_stack;			//局部符号栈
+
+
 //词法分析函数
 private:
 	void external_declaration(int sType);//解析外部声明
@@ -166,6 +172,14 @@ private:
 	void postfix_expression();//后缀表达式
 	void primary_expression();//初值表达式
 	void argument_expression_list();//实参表达式表
+	//	
+	Symbol* sym_push_direct(std::stack<Symbol> *,int token,Type *type, int value);
+	Symbol* sym_push(int token, Type *type, int reg, int value);
+	Symbol* func_sym_push(int token, Type *type);
+	Symbol* var_sym_push(Type *type, int reg, int value, int addr);
+	Symbol* sec_sym_push(char* sec, int value);
+
+
 };
 #endif
 

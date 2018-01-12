@@ -1652,6 +1652,58 @@ void LSCCompilerImp::argument_expression_list() {
 	skip(TK_CLOSEPA);
 }
 
+/*************************************************************************************************************/
+
+Symbol* LSCCompilerImp::sym_push_direct(std::stack<Symbol> *ss, int token, Type *type, int value) {
+	Symbol s, *p = NULL;
+	s.value = value;
+	s.next = NULL;
+	s.token = token;
+	s.type.ref = type->ref;
+	s.type.t = type->t;
+	ss->push(s);
+	p = &(ss->top());
+	return p;
+}
+//将符号放在符号栈中,动态判断是放入全局符号栈还是局部符号栈
+Symbol* LSCCompilerImp::sym_push(int token, Type *type, int reg, int value) {
+	Symbol *ps, **pps;
+	_TkWord *tw;
+	std::stack<Symbol> *ss;
+
+	if (!m_local_sym_stack.empty()){
+		ss = &m_local_sym_stack;
+	}
+	else {
+		ss = &m_global_sym_stack;
+	}
+	ps = sym_push_direct(ss,token,type,value);
+	ps->reg = reg;
+
+	// 不记录结构体成员及匿名符号
+	//？？？
+	if ((token & SC_STRUCT) || token < SC_ANOM) {
+		// 更新单词sym_struct或sym_identifier字段
+		tw = m_TkArray->str[token & ~SC_STRUCT];
+		if (token & SC_STRUCT)
+			pps = &tw->sym_struct;
+		else
+			pps = &tw->sym_identifier;
+		ps->prev_tok = *pps;
+		*pps = ps;
+	}
+	return ps;
+
+}
+//将函数符号放入全局符号表中
+Symbol* LSCCompilerImp::func_sym_push(int token, Type *type) {
+	Symbol *ps, **pps;
+}
+Symbol* LSCCompilerImp::var_sym_push(Type *type, int reg, int value, int addr) {
+}
+Symbol* LSCCompilerImp::sec_sym_push(char* sec, int value) {
+}
+
 //Log
 /*************************************************************************************************************/
 void LogMessage(const char* fmt, ...)
