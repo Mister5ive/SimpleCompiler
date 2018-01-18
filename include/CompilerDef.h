@@ -197,6 +197,7 @@ typedef struct Type
 {
 	int t;
 	struct Symbol *ref;
+	
 } Type;
 
 /* 符号存储结构定义 */

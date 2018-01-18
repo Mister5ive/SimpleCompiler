@@ -111,6 +111,7 @@ private:
 	void skip(int c);
 	void print_tab(int num);//缩进n个Tab键
 	void release();
+
 public:
 	LSCCompilerImp();
 	~LSCCompilerImp();
@@ -126,7 +127,7 @@ public:
 	SmartString<char> *m_TkString;					//单词字符串
 	SmartString<char> *m_SourceString;				//单词源码字符串
 	TkTable *m_TkHashTable;							//单词哈希表
-	SmartArray<_TkWord*>   *m_TkArray;// 单词表中放置标识符，包括变量名,函数名,结构定义名
+	SmartArray<_TkWord*>   *m_TkArray;				// 单词表中放置标识符，包括变量名,函数名,结构定义名
 	FILE *m_file;									//源码文件
 	char ch;										//当前从文件中get的到字符
 	int token;										//单词编码
@@ -136,7 +137,9 @@ public:
 	int syntax_level;								//缩进Tab计数
 	std::stack<Symbol> m_global_sym_stack;			//全局符号栈
 	std::stack<Symbol> m_local_sym_stack;			//局部符号栈
-
+	Type char_pointer_type;							// 字符串指针				
+	Type	int_type;								// int类型
+	Type	default_func_type;						// 缺省函数类型
 
 //词法分析函数
 private:
@@ -178,8 +181,9 @@ private:
 	Symbol* func_sym_push(int token, Type *type);
 	Symbol* var_sym_push(Type *type, int reg, int value, int addr);
 	Symbol* sec_sym_push(char* sec, int value);
-
-
+	void sym_pop(std::stack<Symbol> *ptop, Symbol *b);
+	Symbol *struct_search(int token);
+	Symbol *sym_search(int token);
 };
 #endif
 

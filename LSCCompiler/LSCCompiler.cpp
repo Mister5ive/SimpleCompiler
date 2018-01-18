@@ -1654,6 +1654,8 @@ void LSCCompilerImp::argument_expression_list() {
 
 /*************************************************************************************************************/
 
+
+
 Symbol* LSCCompilerImp::sym_push_direct(std::stack<Symbol> *ss, int token, Type *type, int value) {
 	Symbol s, *p = NULL;
 	s.value = value;
@@ -1698,11 +1700,100 @@ Symbol* LSCCompilerImp::sym_push(int token, Type *type, int reg, int value) {
 //将函数符号放入全局符号表中
 Symbol* LSCCompilerImp::func_sym_push(int token, Type *type) {
 	Symbol *ps, **pps;
+	ps = sym_push_direct(&m_global_sym_stack,token,type,0);
+
+	pps = &((_TkWord*)m_TkArray->str(token))->sym_identifier;
+	// 同名符号，函数符号放在最后-> ->...s 
+	while (*pps != NULL){
+		pps = &(*pps)->prev_tok;
+	}
+	ps->prev_tok = NULL;
+	*pps = ps;
+	return ps;
 }
-Symbol* LSCCompilerImp::var_sym_push(Type *type, int reg, int value, int addr) {
+
+//将变量放入全局符号表中
+Symbol* LSCCompilerImp::var_sym_push(Type *type, int reg, int token, int value) {
+	Symbol *sym = NULL;
+	if ((reg & SC_VALMASK) == SC_LOCAL) {//局部变量
+		sym = sym_push(token, type, reg, value);
+	}
+	else if (token && (reg & SC_VALMASK) == SC_GLOBAL) {//全局变量
+		sym = sym_search(token);
+		if (sym) {
+			LogError("%s, %s %s重定义 line %d",__FILE__,__FUNCTION__, ((_TkWord*)m_TkArray->str(token))->p_word,__LINE__);
+		}
+		else {
+			sym = sym_push(token,type, reg | SC_SYM,0);
+		}
+	
+	}
+	return sym;
 }
+//将节名称放入全局符号表中
 Symbol* LSCCompilerImp::sec_sym_push(char* sec, int value) {
+	_TkWord* tp;
+	Symbol *s;
+	Type type;
+
+	type.t = T_INT;
+
+	tp = m_TkHashTable->insert(sec);
+	token = tp->tkcode;
+	s = sym_push(token,&type,SC_GLOBAL,value);
+	return s;
 }
+//弹出栈中符号直到栈顶符号为'b'
+void LSCCompilerImp::sym_pop(std::stack<Symbol> *ptop, Symbol *b) {
+	Symbol *s, **ps;
+	_TkWord *ts;
+	int v;
+
+	s = &ptop->top();
+	while (s != b) {
+		v = s->token;
+		// 更新单词表中sym_struct sym_identifier
+		if ((v & SC_STRUCT) || v < SC_ANOM) {
+			ts = (_TkWord*)m_TkArray->str(v & ~SC_STRUCT);
+			if (v & SC_STRUCT)
+				ps = &ts->sym_struct;
+			else
+				ps = &ts->sym_identifier;
+			*ps = s->prev_tok;
+		}
+		ptop->pop();
+		s = &ptop->top();
+	}
+}
+
+//查找结构定义
+Symbol *LSCCompilerImp::struct_search(int token) {
+	if (token >= m_TkArray->size())
+		return NULL;
+	else
+		return ((_TkWord*)m_TkArray->str(token))->sym_struct;
+}
+//查找结构定义
+Symbol *LSCCompilerImp::sym_search(int token) {
+	if (token >= m_TkArray->size())
+		return NULL;
+	else
+		return ((_TkWord*)m_TkArray->str(token))->sym_identifier;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //Log
 /*************************************************************************************************************/
