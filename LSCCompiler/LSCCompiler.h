@@ -144,10 +144,10 @@ public:
 //词法分析函数
 private:
 	void external_declaration(int sType);//解析外部声明
-	int type_specifier();//类型区分符
-	void struct_specifier();//结构区分符
-	void struct_declaration_list();//
-	void struct_declaration();//struct
+	int type_specifier(Type *);//类型区分符
+	void struct_specifier(Type *);//结构区分符
+	void struct_declaration_list(Type *);//
+	void struct_declaration(int *maxalign, int *offset, Symbol ***ps);//struct
 	void function_calling_convebtion(int &func);//函数调用约定
 	void struct_member_aligment();//结构成员对齐
 	void declarator();//声明符

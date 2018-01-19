@@ -421,6 +421,17 @@ int TkTable::elf_hash(char *key) {
 	return (hash % TABLEMAX);
 }
 
+/***********************************************************
+* func:	计算字节对齐位置
+* n:		未对齐前值
+* align:   对齐粒度
+**********************************************************/
+inline int calc_align(int n, int align)
+{
+	return ((n + align - 1) & (~(align - 1)));
+}
+
+
 //词法分析类
 /*************************************************************************************************************/
 LSCCompilerImp::LSCCompilerImp() :token(-1), line_num(1), tkvalue(-1),
@@ -995,8 +1006,9 @@ void LSCCompilerImp::syntaxAnalysis_unit() {
 }
 
 /**************************************************
-//解析外部声明
-//sType:存储类型，局部的还是全局的
+*解析外部声明
+*sType:存储类型，SC_LOCAL or SC_GLOBAL
+
 <external_declaration>::=
 <type_specifier>(<TK_SEMICOLON>
 |<declaration><funcbody>
@@ -1006,8 +1018,14 @@ void LSCCompilerImp::syntaxAnalysis_unit() {
 
 **************************************************/
 void LSCCompilerImp::external_declaration(int sType) {
+
+	Type btype, type;
+	int v, has_init, r, addr;
+	Symbol *sym;
+	Section *sec = NULL;
+
 	if (!type_specifier()) {
-		printf("<类型区分符>");
+		LogMessage("<类型区分符>");
 	}
 	if (token == TK_SEMICOLON) {
 		get_token();
@@ -1017,7 +1035,7 @@ void LSCCompilerImp::external_declaration(int sType) {
 		declarator();
 		if (token == TK_BEGIN) {
 			if (sType == SC_LOCAL)
-				printf("不支持函数嵌套定义");
+				LogError("不支持函数嵌套定义");
 			funcbody();
 			break;
 		}
@@ -1039,41 +1057,71 @@ void LSCCompilerImp::external_declaration(int sType) {
 }
 
 /**************************************************
-//类型区分符
+*func:		类型区分符
+*type:		数据类型
+*return:	是否发现合法的类型区分符
+
 <type_specifier>::=<KW_INT> |<KW_CHAR>|<KW_SHORT>|<KW_VOID>|<struct_specifier>
 **************************************************/
 
-int LSCCompilerImp::type_specifier() {
-	int type = 0;
+int LSCCompilerImp::type_specifier(Type *type) {
+	
+	int t = 0,type_found = 0;
+	Type _type;
+
 	switch (token) {
 	case KW_CHAR:
+		t = T_CHAR;
+		type_found = 1;
+		syntax_state = SC_STATE_SP;
+		get_token();
+		break;
 	case KW_INT:
+		t = T_INT;
+		type_found = 1;
+		syntax_state = SC_STATE_SP;
+		get_token();
+		break;
 	case KW_SHORT:
+		t = T_SHORT;
+		type_found = 1;
+		syntax_state = SC_STATE_SP;
+		get_token();
+		break;
 	case KW_VOID:
-		type = 1;
+		t = T_VOID;
+		type_found = 1;
 		syntax_state = SC_STATE_SP;
 		get_token();
 		break;
 	case KW_STRUCT:
 		syntax_state = SC_STATE_SP;
-		struct_specifier();
-		type = 1;
+		struct_specifier(&_type);
+		type->ref = _type.ref;
+		t = T_STRUCT;
+		type_found = 1;
 		break;
 	default:
 		break;
 	}
-	return type;
+	return type_found;
 }
 
 /**************************************************
-//结构体区分符
+*func:		结构体区分符
+*type:		结构类型
+
 <struct_specifier>::=
 <KW_STRUCT><IDENTIFIER><TK_BEGIN><struct_declaration_list><TK_END>
 |<KW_STRUCT><IDENTIFIER>
 **************************************************/
 
-void LSCCompilerImp::struct_specifier() {
+void LSCCompilerImp::struct_specifier(Type *type) {
+	
 	int v;
+	Symbol *sym;
+	Type _type;
+
 	get_token();
 	v = token;
 
@@ -1088,40 +1136,74 @@ void LSCCompilerImp::struct_specifier() {
 	syntax_indent();
 
 	if (v < TK_IDENT)						//关键字不能作为结构体名称
-		printf("struct");
+		LogWarning("struct");
+
+	sym = struct_search(token);
+	if (!sym) {
+		_type.t = KW_STRUCT;
+		// -1表示结构体未定义
+		sym = sym_push(token | SC_STRUCT,&_type,0,-1);
+		sym->reg = 0;
+	}
+	type->t = T_STRUCT;
+	type->ref = sym;
+
 	if (token == TK_BEGIN)
 		struct_declaration_list();
 }
 
 
 /**************************************************
-//结构体声明符表
+*func:		结构体声明符表
+*type:		结构类型
 <struct_declaration_list>::= <struct_declaration>{<struct_declaration>}
 **************************************************/
-void LSCCompilerImp::struct_declaration_list() {
-	//int maxalign, offset;
+void LSCCompilerImp::struct_declaration_list(Type *type) {
+	
+	int maxalign, offset;
+	Symbol *sym, **psym;
 
 	syntax_state = SC_STATE_LF_HT;	//第一个结构体成员另起一行
 	syntax_level++;					//结构体成员变量声明，缩进增加一级
-
 	get_token();
+
+	if (sym->value != -1) {// -1表示结构体未定义
+		LogError("结构体已定义!");
+	}
+	maxalign = 1;
+	psym = &sym->next;
+	offset = 0;
 	while (token != TK_END) {
-		//struct_declaration(&maxalign, &offset);
-		struct_declaration();
+		struct_declaration(&maxalign, &offset, &psym);
 	}
 	skip(TK_END);
 	syntax_state = SC_STATE_LF_HT;
+
+	sym->value = calc_align(offset, maxalign);//结构体大小 ???
+	sym->reg = maxalign; //结构体对齐
 }
 
 /**************************************************
-//结构体声明
+*func:					结构体声明
+* maxalign(输入,输出):	成员最大对齐粒度
+* offset(输入,输出):	偏移量
+* ps(输出):				结构定义符号
+
 <struct_declaration>::=<type_specifier><declarator>{<TK_COMMA><declarator>}<TK_SEMICOLON>
 **************************************************/
 
-void LSCCompilerImp::struct_declaration() {
-	type_specifier();
+void LSCCompilerImp::struct_declaration(int *maxalign, int *offset, Symbol ***ps) {
+	
+	int v, size, align;
+	Symbol *ss;
+	Type _type, btype;
+	int force_align;
+
+	type_specifier(&btype);
 	while (1) {
-		declarator();
+		v = 0;
+		_type = btype;
+		declarator(&_type, &v, &force_align);
 		if (token == TK_SEMICOLON)
 			break;
 		skip(TK_COMMA);
