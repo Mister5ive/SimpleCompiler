@@ -11,7 +11,7 @@
 #define ZERO_MEMORY(VAR) {memset(&VAR, NULL, sizeof(VAR));}
 
 #define ALIGN_SET 0x100  // 强制对齐标志
-
+#define MAXKEY	1024				// 哈希表容量
 typedef enum {
 	LEX_NORMAL = 0,
 	LEX_LEP = 1
@@ -127,6 +127,8 @@ typedef enum {
 
 }e_SynState;
 
+
+
 template<typename T>
 inline void safe_release(T **p, bool b_block)
 {
@@ -205,23 +207,12 @@ typedef struct Symbol
 {
 	int token;					// 符号的单词编码
 	int reg;					// 符号关联的寄存器
-	int value;						// 符号关联值
+	int value;						// 符号关联值  （符号COFF符号表中序号）
 	Type type;					// 符号类型
 	struct Symbol *next;		// 关联的其它符号，结构体定义关联成员变量符号，函数定义关联参数符号
 	struct Symbol *prev_tok;	// 指向前一定义的同名符号
 } Symbol;
 
-/* 节结构定义 */
-typedef struct Section
-{
-	int data_offset;			// 当前数据偏移位置
-	char *data;					// 节数据
-	int data_allocated;			// 分配内存空间
-	char  index;				// 节序号
-	struct Section *link;       // 关联的其它节
-	int *hashtab;				// 哈希表，只用于存储符号表
-	IMAGE_SECTION_HEADER sh;    // 节头
-} Section;
 
 typedef struct _Tk_Word {
 	int tkcode;//word code						// 单词编码 
@@ -232,6 +223,76 @@ typedef struct _Tk_Word {
 
 }_TkWord;
 
+
+#pragma pack(push, 1)
+typedef struct Section
+{
+	int data_offset;			// 当前数据偏移位置
+	char *data;					// 节数据
+	int data_allocated;			// 分配内存空间
+	char  index;				// 节序号
+	Section *link;				// 关联的其它节
+	int *hashtab;				// 哈希表，只用于存储符号表（偏移位置）
+	IMAGE_SECTION_HEADER sh;    // 节头
+}Section;
+
+/* COFF符号结构定义 */
+
+typedef struct CoffSym
+{
+
+	DWORD   Name;					// 符号名称 //偏移量
+	DWORD   Next;					// 用于保存冲突链表*/
+	DWORD   Value;				// 与符号相关的值
+	short   Section;			// 节表的索引(从1开始),用以标识定义此符号的节*/
+	WORD    Type;				// 一个表示类型的数字
+	BYTE    StorageClass;		// 这是一个表示存储类别的枚举类型值
+	BYTE    NumberOfAuxSymbols;	// 跟在本记录后面的辅助符号表项的个数
+} CoffSym;
+
+/* 重定位结构定义 */
+typedef struct CoffReloc
+{
+	DWORD offset;				// 需要进行重定位的代码或数据的地址
+	DWORD cfsym;				// 符号表的索引(从0开始)
+	BYTE  section;				// 需要重定位数据的节编号
+	BYTE  type;					// 重定位类型
+} CoffReloc;
+
+#define CST_FUNC    0x20  //Coff符号类型，函数
+#define CST_NOTFUNC 0     //Coff符号类型，非函数
+
+#pragma pack(pop)
+
+/*节数据结构体*/
+typedef struct Section_Data {
+
+	Section *sec_text;			// 代码节
+	Section	*sec_data;			// 可读可写数据节
+	Section	*sec_bss;			// 未初始化数据节
+	Section	*sec_idata;			// 导入表节
+	Section	*sec_rdata;			// 只读数据节
+	Section	*sec_rel;			// 重定位信息节
+	Section	*sec_symtab;		// 符号表节	
+	Section	*sec_dynsymtab;		// 链接库符号节
+}SectionData;
+
+
+/* 操作数存储结构，存放在语义栈中 */
+typedef struct Operand
+{
+	Type type;			    // 数据类型
+	unsigned short r;       // 寄存器或存储类型
+	int value;              // 常量值，适用于SC_GLOBAL
+	struct Symbol *sym;     // 符号，适用于(SC_SYM | SC_GLOBAL)
+} Operand;
+
+/* 寻址方式 */
+enum e_AddrForm
+{
+	ADDR_OTHER,				// 寄存器间接寻址 [EAX],[EBX]
+	ADDR_REG = 3			// 寄存器直接寻址，EAX,EBX等相当于mod=11000000(C0)
+};
 
 static _TkWord keywords[] = {
 	{ TK_PLUS,		NULL	,"+",					NULL,	NULL },

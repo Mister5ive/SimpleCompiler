@@ -109,7 +109,7 @@ int main() {
 	pSetLogFunction(pLogMessage, pLogError, pLogWarning, pLogLink, pLogCompile);
 	g_Lex = LSCCompilerCreate();
 
-	g_Lex->open("D:\\syntax_test.c");
+	g_Lex->open("D:\\syntax_test1.c");
 
 	g_Lex->init();
 

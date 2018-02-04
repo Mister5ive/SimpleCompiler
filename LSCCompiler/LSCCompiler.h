@@ -4,6 +4,7 @@
 #include "LSCCompilerAPI.h"
 #include "../include/CompilerDef.h"
 #include<stack>
+#include<vector>
 
 /*
 *Log
@@ -66,8 +67,8 @@ public:
 
 class TkTable {
 public:
-	_TkWord **m_Word;//hash map
-	SmartArray<_TkWord> m_tkTable;//dynamic array
+	_TkWord **m_Word;// 单词哈希表
+	SmartArray<_TkWord> m_tkTable;// 单词表中放置标识符，包括变量名,函数名,结构定义名
 public:
 	TkTable();
 	~TkTable();
@@ -110,6 +111,8 @@ private:
 	char* get_tkstr(int token);
 	void skip(int c);
 	void print_tab(int num);//缩进n个Tab键
+	int  type_size(Type *t, int *a);
+	void mk_pointer(Type *t);//生成指针类型
 	void release();
 
 public:
@@ -124,23 +127,32 @@ public:
 	void syntaxAnalysis_unit();
 	void syntax_indent();							//语法缩进
 public:
-	SmartString<char> *m_TkString;					//单词字符串
-	SmartString<char> *m_SourceString;				//单词源码字符串
-	TkTable *m_TkHashTable;							//单词哈希表
-	SmartArray<_TkWord*>   *m_TkArray;				// 单词表中放置标识符，包括变量名,函数名,结构定义名
-	FILE *m_file;									//源码文件
-	char ch;										//当前从文件中get的到字符
-	int token;										//单词编码
-	int line_num;									//行号
-	int tkvalue;									//单词值
-	int syntax_state;								//语法状态
-	int syntax_level;								//缩进Tab计数
-	std::stack<Symbol> m_global_sym_stack;			//全局符号栈
-	std::stack<Symbol> m_local_sym_stack;			//局部符号栈
-	Type char_pointer_type;							// 字符串指针				
-	Type	int_type;								// int类型
-	Type	default_func_type;						// 缺省函数类型
-
+	SmartString<char>*								m_TkString;					//单词字符串
+	SmartString<char>*								m_SourceString;				//单词源码字符串
+	TkTable*										m_TkHashTable;				//单词表
+	std::vector<Section*>							m_section;
+	FILE*											m_file;						//源码文件
+	char											ch;							//当前从文件中get的到字符
+	int												token;						//单词编码
+	int												line_num;					//行号
+	int												tkvalue;					//单词值
+	int												syntax_state;				//语法状态
+	int												syntax_level;				//缩进Tab计数
+	std::stack<Symbol>								m_global_sym_stack;			//全局符号栈
+	std::stack<Symbol>								m_local_sym_stack;			//局部符号栈
+	Type											char_pointer_type;			// 字符串指针				
+	Type											int_type;					// int类型
+	Type											default_func_type;			// 缺省函数类型
+	int												nsec_image;					// 映像文件节个数
+	SectionData										m_section_data;				//节数据
+	Operand  										m_optop;					    // 操作数栈栈顶
+	std::stack<Operand>								m_opstack;					// 操作数栈
+	int												rsym;						// 记录return指令位置
+	int												ind ;						// 指令在代码节位置
+	int												loc;						// 局部变量在栈中位置
+	int												func_begin_ind;				// 函数开始指令
+	int												func_ret_sub;				// 函数返回释放栈空间大小
+	Symbol*											sym_sec_rdata;				// 只读节符号
 //词法分析函数
 private:
 	void external_declaration(int sType);//解析外部声明
@@ -149,20 +161,20 @@ private:
 	void struct_declaration_list(Type *);//
 	void struct_declaration(int *maxalign, int *offset, Symbol ***ps);//struct
 	void function_calling_convebtion(int &func);//函数调用约定
-	void struct_member_aligment();//结构成员对齐
-	void declarator();//声明符
-	void direct_declarator();//直接声明符
-	void direct_declarator_postfix();//直接声明符后缀
-	void parameter_type_list(int func_call);//解析形参类型表
-	void funcbody();//函数体
-	void initializer();//初值符
-	void statement();//语句
-	void compound_statement();//复合语句
+	void struct_member_aligment(int*);//结构成员对齐
+	void declarator(Type *type, int *token, int *force_align);//声明符
+	void direct_declarator(Type *type, int *token, int func_call);//直接声明符
+	void direct_declarator_postfix(Type *type, int func_call);//直接声明符后缀
+	void parameter_type_list(Type *type, int func_call);//解析形参类型表
+	void funcbody(Symbol *sym);//函数体
+	void initializer(Type *type, int c, Section *sec);//初值符
+	void statement(int *bsym, int *csym);//语句
+	void compound_statement(int *bsym, int *csym);//复合语句
 	void expression_statement();//表达式语句
-	void if_statement();//if
-	void for_statement();//for
-	void continue_statement();//continue
-	void break_statement();//break
+	void if_statement(int *bsym, int *csym);//if
+	void for_statement(int *bsym, int *csym);//for
+	void continue_statement(int* csym);//continue
+	void break_statement(int* bsym);//break
 	void return_statement();//return
 	void expression();//表达式
 	void assignment_expression();//赋值表达式
@@ -184,6 +196,38 @@ private:
 	void sym_pop(std::stack<Symbol> *ptop, Symbol *b);
 	Symbol *struct_search(int token);
 	Symbol *sym_search(int token);
+	//sec
+	Section* section_create(char *name, int Characteristics);
+	void *section_malloc(Section *sec, int increment);
+	int section_realloc(Section *sec, int new_size);
+	Section *coffsym_section_create(char *symtab_name, int Characteristics, char *strtab_name);
+	int coffsym_add(Section *symtab, char* name, int val, int sec_index,short type, char StorageClass);
+	int coffsym_search(Section *symtab, char *name);
+	char *coffstr_add(Section *strtab, char* name);
+	void coffsym_add_update(Symbol *s, int val, int sec_index, short type, char StorageClass);
+	void coffreloc_add(Section *sec, Symbol *sym, int offset, char type);
+	void coffreloc_direct_add(int offset, int cfsym, char section, char type);
+	void coff_init();
+	void fpad(FILE *fp, int new_pos, int pad);
+	void write_obj(char *name);
+
+	//oper
+	void operand_push(Type *type, int r, int value);
+	void operand_pop();
+	void operand_swap();
+	void operand_assign(Operand *opd, int t, int r, int v);
+	void cancel_lvalue();
+	void indirection();
+
+	//gencode
+	void gen_byte(char c);
+	void gen_prefix(char opcode);
+	void gen_opcode1(char opcode);
+	void gen_opcode2(char first, char second);
+	void gen_modrm(int mod, int reg_opcode, int r_m, Symbol *sym, int c);
+	void gen_dword(unsigned int c);
+	void gen_addr32(int r, Symbol *sym, int c);
+	void operand_load(int r, Operand *opd);
 };
 #endif
 
