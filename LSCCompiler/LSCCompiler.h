@@ -5,6 +5,8 @@
 #include "../include/CompilerDef.h"
 #include<stack>
 #include<vector>
+#include<list>
+#include <algorithm> 
 
 /*
 *Log
@@ -15,6 +17,57 @@ void LogLink(const char *fmt, ...);
 void LogWarning(const char *fmt, ...);
 void LogError(const char *fmt, ...);
 void LogMessage(const char* fmt, ...);
+
+//stack 
+//template<typename T, class C = std::list<T>>
+//class Stack {
+//public:
+//	typedef typename C::iterator iterator;
+//	iterator begin() { return cc.begin(); }
+//	iterator end() { return cc.end(); }
+//	void push(const T& vaule) { cc.push_front(vaule); }
+//	void pop() { cc.pop_front(); }
+//	T top() { return cc.front(); }
+//	bool empty() { return cc.empty(); }
+//	int size() { return cc.size(); }
+//	T& operator[](int i) {
+//		if (i < size()) {
+//			return cc[i];
+//		}
+//		else
+//		{
+//			printf("超过下标最大值\n");
+//		}
+//	}
+//	void top_swap() {
+//		if(size()>=2)
+//			std::swap(cc[0],cc[1]);
+//	}
+//	
+//private:
+//	C cc;
+//};
+
+//操作数栈类
+//template<typename T>
+class opStack {
+private:
+	Operand		m_stack[256];
+	Operand*	m_top;
+
+public:
+				opStack();
+				~opStack();
+	void		push(Type *type, int r, int value);
+	void		pop();
+	void		swap();
+	void		cancel_lvalue();
+	bool		is_lvalue();
+	Operand*	point2StackTop(int index);
+	Operand*	point2Stack();
+};
+
+
 ///*
 //*动态字符串
 //*/
@@ -144,9 +197,11 @@ public:
 	Type											int_type;					// int类型
 	Type											default_func_type;			// 缺省函数类型
 	int												nsec_image;					// 映像文件节个数
-	SectionData										m_section_data;				//节数据
-	Operand  										m_optop;					    // 操作数栈栈顶
-	std::stack<Operand>								m_opstack;					// 操作数栈
+	SectionData										m_section_data;				// 节数据
+	//Operand  										m_optop;					// 操作数栈栈顶
+	//std::list<Operand>::iterator					m_optop;
+	//Stack<Operand>								m_opstack;					// 操作数栈
+	opStack											m_opstack;
 	int												rsym;						// 记录return指令位置
 	int												ind ;						// 指令在代码节位置
 	int												loc;						// 局部变量在栈中位置
@@ -212,11 +267,7 @@ private:
 	void write_obj(char *name);
 
 	//oper
-	void operand_push(Type *type, int r, int value);
-	void operand_pop();
-	void operand_swap();
 	void operand_assign(Operand *opd, int t, int r, int v);
-	void cancel_lvalue();
 	void indirection();
 
 	//gencode
@@ -228,6 +279,17 @@ private:
 	void gen_dword(unsigned int c);
 	void gen_addr32(int r, Symbol *sym, int c);
 	void operand_load(int r, Operand *opd);
+	int stack_top_load1(int rc, Operand *opd);
+	void stack_top_load2(int rc1, int rc2);
+	void operand_store(int rc, Operand *opd);
+	void stack_store();
+	int	 allocate_reg(int rc);
+	void spill_reg(int r);
+	void spill_regs();
+
+	void gen_op(int op);
+
+
 };
 #endif
 

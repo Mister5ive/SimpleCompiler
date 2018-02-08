@@ -49,7 +49,53 @@ int elf_hash(char *key)
 	}
 	return h % MAXKEY;
 }
+//opStack
+/*************************************************************************************************************/
 
+
+void opStack::push(Type *type, int r, int value) {
+
+	if (m_top >= m_stack + OPSTACK_SIZE - 1){
+		LogMessage("%s,%s opStack push fail %d",__FILE__,__FUNCTION__,__LINE__);
+		return;
+	}
+	m_top++;
+	m_top->type = *type;
+	m_top->r = r;
+	m_top->value = value;
+}
+void opStack::pop(){
+	m_top--;
+}
+void opStack::swap(){
+	Operand tmp;
+
+	tmp = m_top[0];
+	m_top[0] = m_top[-1];
+	m_top[-1] = tmp;
+}
+
+void opStack::cancel_lvalue(){
+
+	if(is_lvalue())
+		m_top->r &= ~SC_LVAL;
+}
+
+bool opStack::is_lvalue(){
+
+	return m_top->r & SC_LVAL;
+}
+/***********************************************************
+func:	返回栈顶+index处的操作数指针
+**********************************************************/
+Operand*	opStack::point2StackTop(int index = 0) {
+	
+	return m_top + index;
+}
+
+Operand*	opStack::point2Stack() {
+	return m_stack;
+}
 //动态字符串
 /*************************************************************************************************************/
 template<typename T>
@@ -2550,15 +2596,7 @@ void LSCCompilerImp::write_obj(char *name)
 	fclose(fout);
 }
 
-void LSCCompilerImp::operand_push(Type *type, int r, int value){
 
-}
-void LSCCompilerImp::operand_pop(){
-
-}
-void LSCCompilerImp::operand_swap(){
-
-}
 /***********************************************************
 * func:			操作数赋值
 * t:			操作数数据类型
@@ -2571,22 +2609,32 @@ void LSCCompilerImp::operand_assign(Operand *opd, int t, int r, int v){
 	opd->r = r;
 	opd->value = v;
 }
-void LSCCompilerImp::cancel_lvalue(){
 
-}
 /***********************************************************
-func:	间接寻址，这里的 * 号是指针间接寻址运算符(Indirection Operator)
+功能:	间接寻址，这里的 * 号是指针间接寻址运算符(Indirection Operator)
 **********************************************************/
-void LSCCompilerImp::indirection(){
-
-	if ((m_optop.type.t & T_BTYPE) != T_PTR) {
-	
-		if ((m_optop.type.t & T_BTYPE) == T_FUNC)
+void LSCCompilerImp::indirection()
+{
+	Operand *optop;
+	optop = m_opstack.point2StackTop();
+	if ((optop->type.t & T_BTYPE) != T_PTR)
+	{
+		if ((optop->type.t & T_BTYPE) == T_FUNC)
 			return;
-		LogMessage("%s, %s, 缺少指针line: %d",__FILE__,__FUNCTION__,__LINE__);
+		LogMessage("缺少指针");
 	}
+	if ((optop->r & SC_LVAL))
+		stack_top_load1(REG_ANY, optop);
+	optop->type = optop->type.ref->type;
 
+	// 数组与函数不能为左值
+	if (!(optop->type.t & T_ARRAY)
+		&& (optop->type.t & T_BTYPE) != T_FUNC)
+	{
+		optop->r |= SC_LVAL;
+	}
 }
+
 /***********************************************************
 * func:		向代码节写入一个字节
 * c:		字节值
@@ -2722,19 +2770,260 @@ void LSCCompilerImp::operand_load(int r, Operand *opd) {
 	if (fr & SC_LVAL) {//左值
 		
 		if ((ft & T_BTYPE) == T_CHAR)
+			// movsx -- move with sign-extention	
+			// 0F BE /r	movsx r32,r/m8	move byte to doubleword,sign-extention
 			gen_opcode2(0x0f, 0xbe);//MOVSX
 		else if ((ft & T_BTYPE) == T_SHORT)
+			// movsx -- move with sign-extention	
+			// 0F BF /r	movsx r32,r/m16	move word to doubleword,sign-extention
 			gen_opcode2(0x0f, 0xbf);//MOVSX
 		else
+			// 8B /r	mov r32,r/m32	mov r/m32 to r32
 			gen_opcode1(0x8b);
 
 		gen_modrm(ADDR_OTHER, r, fr, opd->sym, fc);
 	}
 	else {
 	
-	
+		if (v == SC_GLOBAL) {
+			// B8+ rd	mov r32,imm32		mov imm32 to r32
+			gen_opcode1(0xb8 + r);
+			gen_addr32(fr, opd->sym, fc);
+		}
+		else if (v == SC_LOCAL) {
+		
+			// LEA--Load Effective Address
+			// 8D /r	LEA r32,m	Store effective address for m in register r32
+			gen_opcode1(0x8d);
+			gen_modrm(ADDR_OTHER, r, SC_LOCAL, opd->sym, fc);
+		}
+		else if (v == SC_CMP) {// 适用于c=a>b情况
+			 /*适用情况生成的样例代码
+			 00401384   39C8             CMP EAX,ECX
+			 00401386   B8 00000000      MOV EAX,0
+			 0040138B   0F9FC0           SETG AL
+			 0040138E   8945 FC          MOV DWORD PTR SS:[EBP-4],EAX*/
+
+			 /*B8+ rd	mov r32,imm32		mov imm32 to r32*/
+			gen_opcode1(0xb8 + r); /* mov r, 0*/
+			gen_dword(0);
+
+			// SETcc--Set Byte on Condition
+			// OF 9F			SETG r/m8	Set byte if greater(ZF=0 and SF=OF)
+			// 0F 8F cw/cd		JG rel16/32	jump near if greater(ZF=0 and SF=OF)
+			gen_opcode2(0x0f, fc + 16);
+			gen_modrm(ADDR_REG, 0, r, NULL, 0);
+		}
+		else if (v != r) {
+		
+			// 89 /r	MOV r/m32,r32	Move r32 to r/m32
+			gen_opcode1(0x89);
+			gen_modrm(ADDR_REG, v, r, NULL, 0);
+		}
 	}
 }
+/***********************************************************
+* func:			将寄存器'r'中的值存入操作数'opd'
+* r:			符号存储类型
+* opd:			操作数指针
+**********************************************************/
+void LSCCompilerImp::operand_store(int r, Operand *opd) {
+
+	int fr, bt;
+	fr = opd->r & SC_VALMASK;
+	bt = opd->type.t & T_BTYPE;
+
+	if(bt == T_SHORT)
+		gen_prefix(0x66); //Operand-size override, 66H
+	if (bt == T_CHAR)
+		// 88 /r	MOV r/m,r8	Move r8 to r/m8
+		gen_opcode1(0x88);
+	else
+		// 89 /r	MOV r/m32,r32	Move r32 to r/m32
+		gen_opcode1(0x89);
+
+	if (fr == SC_GLOBAL || fr == SC_LOCAL || (opd->r & SC_LVAL))
+	{
+		gen_modrm(ADDR_OTHER, r, opd->r, opd->sym, opd->value);
+	}
+}
+/***********************************************************
+* func:			寄存器分配，如果所需寄存器被占用,先将其内容溢出到栈中
+* rc:			寄存器类型
+**********************************************************/
+int	 LSCCompilerImp::allocate_reg(int rc) {
+
+	int r;
+	Operand *p;
+	bool used = false;
+	Operand *optop, *opstack;
+
+	/* 查找空闲的寄存器 */
+	for (r = 0; r <= REG_EBX; r++) {
+		if (rc & REG_ANY || r == rc) {
+			used = false;
+			
+			optop = m_opstack.point2StackTop();
+			opstack = m_opstack.point2Stack();
+
+			for (p = opstack; p <= optop; p++)
+			{
+				if ((p->r & SC_VALMASK) == r)
+					used = true;
+			}
+			/*std::list<Operand>::iterator iter = m_opstack.begin();
+			for (; iter != m_opstack.end(); iter++){
+				if (((*iter).r & SC_VALMASK) == r) {
+					used = true;
+				}*/
+				if (!used) return r;
+			}
+		}
+
+	// 如果没有空闲的寄存器，从操作数栈底开始查找到第一个占用的寄存器溢出到栈中
+	
+	//for (int index = m_opstack.size() - 1; index >= 0;index --) {
+	//	r = m_opstack[index].r & SC_VALMASK;
+	//	if (r < SC_GLOBAL && (rc & REG_ANY || r == rc)) {//???
+	//		spill_reg(r);
+	//		return r;
+	//	}
+	//}
+	optop = m_opstack.point2StackTop();
+	opstack = m_opstack.point2Stack();
+
+	for (p = opstack; p <= optop; p++)
+	{
+		r = p->r & SC_VALMASK;
+		if (r < SC_GLOBAL && (rc & REG_ANY || r == rc))
+		{
+			spill_reg(r);
+			return r;
+		}
+	}
+	return -1;
+	
+}
+/***********************************************************
+* func:			将寄存器'r'溢出到内存栈中,并且标记释放'r'寄存器的操作数为局部变量
+* r:			寄存器编码
+**********************************************************/
+//????
+void  LSCCompilerImp::spill_reg(int r) {
+
+	int size, align;
+	Operand opd1, opd2;
+	Type *type;
+
+	std::list<Operand>::iterator iter = m_opstack.begin();
+	for (; iter != m_opstack.end(); iter++) {
+		if (((*iter).r & SC_VALMASK) == r) {
+			opd1 = (*iter);
+			type = &opd1.type;
+			if(opd1.r & SC_LVAL)
+				type = &int_type; //???
+			size = type_size(type,&align);
+			loc = calc_align(loc - size,align);
+			operand_assign(&opd2,type->t, SC_LOCAL | SC_LVAL, loc);
+			operand_store(r,&opd2);
+			if (opd1.r & SC_LVAL)
+			{
+				opd1.r = (opd1.r & ~(SC_VALMASK)) | SC_LLOCAL; //标识操作数放在栈中
+			}
+			else //sum = add(a = add(a,b),b = add(c,d));
+			{
+				opd1.r = SC_LOCAL | SC_LVAL;
+			}
+			opd1.value = loc;
+			break;
+		}
+	}
+}
+
+/***********************************************************
+* func:	将占用的寄存器全部溢出到栈中
+**********************************************************/
+void LSCCompilerImp::spill_regs() {
+
+	int r;
+	
+	std::list<Operand>::iterator iter = m_opstack.begin();
+	for (; iter != m_opstack.end(); iter++) {
+		r = (*iter).r & SC_VALMASK;
+		if (r < SC_GLOBAL)
+			spill_reg(r);
+	}
+}
+/***********************************************************
+* func:			将栈顶操作数加载到'rc'类寄存器中
+* rc:			寄存器类型
+* opd:			操作数指针
+**********************************************************/
+int LSCCompilerImp::stack_top_load1(int rc, Operand *opd) {
+
+	int r;
+	r = m_opstack.begin()->r & SC_VALMASK;
+	// 需要加载到寄存器中情况：
+	// 1.栈顶操作数目前未分配寄存器 //????
+	// 2.栈顶操作数已分配寄存器，但为左值 *p
+	if (r >= SC_GLOBAL || (m_opstack.begin()->r & SC_LVAL)) {
+		r = allocate_reg(rc);
+		operand_load(r,opd);
+	}
+	opd->r = r;
+	return r;
+}
+
+/***********************************************************
+* func:		将栈顶操作数加载到'rc1'类寄存器，将次栈顶操作数加载到'rc2'类寄存器
+* rc1:		栈顶操作数加载到的寄存器类型
+* rc2:		次栈顶操作数加载到的寄存器类型
+**********************************************************/
+void LSCCompilerImp::stack_top_load2(int rc1, int rc2) {
+
+	std::list<Operand>::iterator iter = m_opstack.begin();
+	stack_top_load1(rc1, &(*iter));
+	stack_top_load1(rc2, &(*(++iter)));
+
+}
+/***********************************************************
+* 功能:	将栈顶操作数存入次栈顶操作数中
+**********************************************************/
+//????
+void LSCCompilerImp::stack_store() {
+
+	int r, t;
+	std::list<Operand>::iterator iter = m_opstack.begin();
+	r = stack_top_load1(REG_ANY , &*iter);
+	// 左值如果被溢出到栈中，必须加载到寄存器中
+	iter++;//次栈顶
+	if ((*(iter)).r & SC_VALMASK == SC_LLOCAL) {
+
+		Operand opd;
+		t = allocate_reg(REG_ANY);
+		operand_assign(&opd, T_INT, SC_LOCAL | SC_LVAL, (*(iter)).value);
+		operand_load(t,&opd);
+		(*(iter)).r = t | SC_LVAL;
+	}
+	operand_store(r,&*iter);
+	//????
+	m_opstack.top_swap();
+	m_opstack.pop();
+}
+
+/***********************************************************
+* func:			生成二元运算,对指针操作数进行一些特殊处理
+* op:			运算符类型
+**********************************************************/
+void LSCCompilerImp::gen_op(int op) {
+	
+	int u, bt1, bt2;
+	Type type;
+
+
+}
+
+
 //Log
 /*************************************************************************************************************/
 void LogMessage(const char* fmt, ...)

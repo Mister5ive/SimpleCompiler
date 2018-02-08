@@ -261,6 +261,7 @@ typedef struct CoffReloc
 
 #define CST_FUNC    0x20  //Coff符号类型，函数
 #define CST_NOTFUNC 0     //Coff符号类型，非函数
+#define OPSTACK_SIZE 256
 
 #pragma pack(pop)
 
@@ -293,6 +294,21 @@ enum e_AddrForm
 	ADDR_OTHER,				// 寄存器间接寻址 [EAX],[EBX]
 	ADDR_REG = 3			// 寄存器直接寻址，EAX,EBX等相当于mod=11000000(C0)
 };
+
+/* 寄存器编码 */
+enum e_Register
+{
+	REG_EAX = 0,
+	REG_ECX,
+	REG_EDX,
+	REG_EBX,
+	REG_ESP,
+	REG_EBP,
+	REG_ESI,
+	REG_EDI,
+	REG_ANY
+};
+#define REG_IRET  REG_EAX	// 存放函数返回值的寄存器
 
 static _TkWord keywords[] = {
 	{ TK_PLUS,		NULL	,"+",					NULL,	NULL },
